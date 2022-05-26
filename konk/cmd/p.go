@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/jclem/konk/konk"
 	"github.com/mattn/go-shellwords"
@@ -37,6 +38,18 @@ var PCommand = cobra.Command{
 			} else {
 				labels[i] = fmt.Sprintf("%d", i)
 			}
+		}
+
+		var maxLabelLen int
+
+		for _, label := range labels {
+			if len(label) > maxLabelLen {
+				maxLabelLen = len(label)
+			}
+		}
+
+		for i, label := range labels {
+			labels[i] = fmt.Sprintf("%s%s", label, strings.Repeat(" ", maxLabelLen-len(label)))
 		}
 
 		var eg errgroup.Group
