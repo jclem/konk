@@ -55,7 +55,7 @@ var pCommand = cobra.Command{
 
 		if aggregateOutput {
 			for _, cmd := range commands {
-				fmt.Println(cmd.ReadOut())
+				fmt.Print(cmd.ReadOut())
 			}
 		}
 
