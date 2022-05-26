@@ -7,9 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var snames []string
-
-var SCommand = cobra.Command{
+var sCommand = cobra.Command{
 	Use:   "s <command...>",
 	Short: "Run commands in serial",
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -18,7 +16,7 @@ var SCommand = cobra.Command{
 			return err
 		}
 
-		if len(pnames) > 0 && len(pnames) != len(commands) {
+		if len(names) > 0 && len(names) != len(commands) {
 			return fmt.Errorf("number of names must match number of commands")
 		}
 
@@ -41,6 +39,5 @@ var SCommand = cobra.Command{
 }
 
 func init() {
-	SCommand.Flags().StringArrayVarP(&snames, "name", "n", []string{}, "name prefix for the command")
-	rootCmd.AddCommand(&SCommand)
+	runCommand.AddCommand(&sCommand)
 }

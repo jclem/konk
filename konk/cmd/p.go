@@ -8,9 +8,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-var pnames []string
-
-var PCommand = cobra.Command{
+var pCommand = cobra.Command{
 	Use:   "p <command...>",
 	Short: "Run commands in parallel",
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -19,7 +17,7 @@ var PCommand = cobra.Command{
 			return err
 		}
 
-		if len(pnames) > 0 && len(pnames) != len(commands) {
+		if len(names) > 0 && len(names) != len(commands) {
 			return fmt.Errorf("number of names must match number of commands")
 		}
 
@@ -47,6 +45,5 @@ var PCommand = cobra.Command{
 }
 
 func init() {
-	PCommand.Flags().StringArrayVarP(&pnames, "name", "n", []string{}, "name prefix for the command")
-	rootCmd.AddCommand(&PCommand)
+	runCommand.AddCommand(&pCommand)
 }
