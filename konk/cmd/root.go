@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var rootCmd = &cobra.Command{
+var rootCmd = cobra.Command{
 	Use:   "konk",
 	Short: "Konk is a tool for running multiple processes",
 }
