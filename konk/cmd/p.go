@@ -6,19 +6,20 @@ import (
 	"github.com/jclem/konk/konk"
 	"github.com/mattn/go-shellwords"
 	"github.com/spf13/cobra"
+	"golang.org/x/sync/errgroup"
 )
 
-var snames []string
+var pnames []string
 
-var SCommand = cobra.Command{
-	Use:   "s <command...>",
-	Short: "Run commands in serial",
+var PCommand = cobra.Command{
+	Use:   "p <command...>",
+	Short: "Run commands in parallel",
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		commands := make([][]string, len(args))
 		labels := make([]string, len(args))
 
-		if len(snames) > 0 && len(snames) != len(args) {
+		if len(pnames) > 0 && len(pnames) != len(args) {
 			return fmt.Errorf("number of names must match number of commands")
 		}
 
@@ -31,30 +32,35 @@ var SCommand = cobra.Command{
 
 			commands[i] = args
 
-			if len(snames) > 0 {
-				labels[i] = snames[i]
+			if len(pnames) > 0 {
+				labels[i] = pnames[i]
 			} else {
 				labels[i] = fmt.Sprintf("%d", i)
 			}
 		}
 
-		for i, cmd := range commands {
-			c := konk.NewCommand(konk.CommandConfig{
-				Name:  cmd[0],
-				Args:  cmd[1:],
-				Label: labels[i],
-			})
+		var eg errgroup.Group
 
-			if err := c.Run(); err != nil {
-				return err
-			}
+		for i, cmd := range commands {
+			cmd := cmd
+			i := i
+
+			eg.Go(func() error {
+				c := konk.NewCommand(konk.CommandConfig{
+					Name:  cmd[0],
+					Args:  cmd[1:],
+					Label: labels[i],
+				})
+
+				return c.Run()
+			})
 		}
 
-		return nil
+		return eg.Wait()
 	},
 }
 
 func init() {
-	SCommand.Flags().StringArrayVarP(&snames, "name", "n", []string{}, "name prefix for the command")
-	rootCmd.AddCommand(&SCommand)
+	PCommand.Flags().StringArrayVarP(&pnames, "name", "n", []string{}, "name prefix for the command")
+	rootCmd.AddCommand(&PCommand)
 }
