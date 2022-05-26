@@ -31,7 +31,9 @@ var SCommand = cobra.Command{
 
 			commands[i] = args
 
-			if len(snames) > 0 {
+			if cmdAsLabel {
+				labels[i] = cmd
+			} else if len(snames) > 0 {
 				labels[i] = snames[i]
 			} else {
 				labels[i] = fmt.Sprintf("%d", i)
