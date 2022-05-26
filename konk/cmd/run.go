@@ -12,7 +12,7 @@ import (
 )
 
 var cmdAsLabel bool
-var npmCmd []string
+var npmCmds []string
 var names []string
 
 var runCommand = cobra.Command{
@@ -27,7 +27,7 @@ var runCommand = cobra.Command{
 
 func init() {
 	runCommand.PersistentFlags().BoolVarP(&cmdAsLabel, "command-as-label", "L", false, "use command as label")
-	runCommand.PersistentFlags().StringArrayVar(&npmCmd, "npm", []string{}, "npm command")
+	runCommand.PersistentFlags().StringArrayVar(&npmCmds, "npm", []string{}, "npm command")
 	runCommand.PersistentFlags().StringArrayVarP(&names, "name", "n", []string{}, "name prefix for the command")
 	rootCmd.AddCommand(&runCommand)
 }
@@ -47,7 +47,7 @@ func collectCommands(args []string) ([]string, [][]string, error) {
 		commandStrings = append(commandStrings, cmd)
 	}
 
-	for i, cmd := range npmCmd {
+	for i, cmd := range npmCmds {
 		if strings.HasSuffix(cmd, "*") {
 			prefix := strings.TrimSuffix(cmd, "*")
 			pkgFile, err := os.ReadFile("package.json")
