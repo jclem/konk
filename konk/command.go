@@ -23,7 +23,6 @@ type CommandConfig struct {
 
 func NewCommand(conf CommandConfig) *Command {
 	c := exec.Command(conf.Name, conf.Args...)
-	c.Stderr = c.Stdout
 	prefixColor := rand.Intn(16) + 1
 	prefixStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(fmt.Sprint(prefixColor)))
 	prefix := prefixStyle.Render(fmt.Sprintf("[%s]", conf.Label))
@@ -39,6 +38,7 @@ func (c *Command) Run() error {
 	if err != nil {
 		return err
 	}
+	c.c.Stderr = c.c.Stdout
 
 	out := make(chan string)
 	done := make(chan bool)
