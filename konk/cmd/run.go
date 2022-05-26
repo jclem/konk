@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/mattn/go-shellwords"
@@ -24,28 +26,61 @@ var runCommand = cobra.Command{
 }
 
 func init() {
-	runCommand.PersistentFlags().BoolVar(&cmdAsLabel, "command-as-label", false, "use command as label")
+	runCommand.PersistentFlags().BoolVarP(&cmdAsLabel, "command-as-label", "L", false, "use command as label")
 	runCommand.PersistentFlags().StringArrayVar(&npmCmd, "npm", []string{}, "npm command")
 	runCommand.PersistentFlags().StringArrayVarP(&names, "name", "n", []string{}, "name prefix for the command")
 	rootCmd.AddCommand(&runCommand)
 }
 
 func collectCommands(args []string) ([]string, [][]string, error) {
-	commandStrings := make([]string, len(args)+len(npmCmd))
-	commands := make([][]string, len(args)+len(npmCmd))
+	commandStrings := []string{}
+	commands := [][]string{}
 
-	for i, cmd := range args {
+	for _, cmd := range args {
 		parts, err := shellwords.Parse(cmd)
 
 		if err != nil {
 			return nil, nil, err
 		}
 
-		commandStrings[i] = cmd
-		commands[i] = parts
+		commands = append(commands, parts)
+		commandStrings = append(commandStrings, cmd)
 	}
 
 	for i, cmd := range npmCmd {
+		if strings.HasSuffix(cmd, "*") {
+			prefix := strings.TrimSuffix(cmd, "*")
+			pkgFile, err := os.ReadFile("package.json")
+			if err != nil {
+				return nil, nil, err
+			}
+			var pkg map[string]interface{}
+			if err := json.Unmarshal(pkgFile, &pkg); err != nil {
+				return nil, nil, err
+			}
+
+			// See if any "scripts" match our prefix
+			matchingScripts := []string{}
+			for script := range pkg["scripts"].(map[string]interface{}) {
+				if strings.HasPrefix(script, prefix) {
+					matchingScripts = append(matchingScripts, script)
+				}
+			}
+
+			sort.Sort(sort.StringSlice(matchingScripts))
+
+			for _, script := range matchingScripts {
+				parts, err := shellwords.Parse(fmt.Sprintf("npm run %s", script))
+				if err != nil {
+					return nil, nil, err
+				}
+				commands = append(commands, parts)
+				commandStrings = append(commandStrings, script)
+			}
+
+			continue
+		}
+
 		parts, err := shellwords.Parse(fmt.Sprintf("npm run %s", cmd))
 
 		if err != nil {
