@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/jclem/konk/konk"
@@ -25,7 +26,7 @@ var pCommand = cobra.Command{
 
 		labels := collectLabels(cmdStrings)
 
-		var eg errgroup.Group
+		eg, ctx := errgroup.WithContext(context.Background())
 
 		commands := make([]*konk.Command, len(cmdParts))
 
@@ -43,7 +44,7 @@ var pCommand = cobra.Command{
 			cmd := cmd
 
 			eg.Go(func() error {
-				return cmd.Run(konk.RunCommandConfig{
+				return cmd.Run(ctx, konk.RunCommandConfig{
 					AggregateOutput: aggregateOutput,
 				})
 			})

@@ -2,10 +2,12 @@ package konk
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"math/rand"
 	"os/exec"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
@@ -39,7 +41,7 @@ func NewCommand(conf CommandConfig) *Command {
 	}
 }
 
-func (c *Command) Run(conf RunCommandConfig) error {
+func (c *Command) Run(ctx context.Context, conf RunCommandConfig) error {
 	stdout, err := c.c.StdoutPipe()
 	if err != nil {
 		return err
@@ -50,7 +52,15 @@ func (c *Command) Run(conf RunCommandConfig) error {
 	done := make(chan bool)
 	scanner := bufio.NewScanner(stdout)
 
+	// I don't quite understand this or the syscall.Kill below.
+	c.c.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+
 	if err := c.c.Start(); err != nil {
+		return err
+	}
+
+	pgid, err := syscall.Getpgid(c.c.Process.Pid)
+	if err != nil {
 		return err
 	}
 
@@ -64,13 +74,18 @@ func (c *Command) Run(conf RunCommandConfig) error {
 
 	go func() {
 		for {
-			t := <-out
-			line := fmt.Sprintf("%s %s\n", c.prefix, t)
+			select {
+			case <-ctx.Done():
+				syscall.Kill(-pgid, 15)
+				return
+			case t := <-out:
+				line := fmt.Sprintf("%s %s\n", c.prefix, t)
 
-			if conf.AggregateOutput {
-				c.out.WriteString(line)
-			} else {
-				fmt.Print(line)
+				if conf.AggregateOutput {
+					c.out.WriteString(line)
+				} else {
+					fmt.Print(line)
+				}
 			}
 		}
 	}()

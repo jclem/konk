@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/jclem/konk/konk"
@@ -29,7 +30,7 @@ var sCommand = cobra.Command{
 				Label: labels[i],
 			})
 
-			if err := c.Run(konk.RunCommandConfig{}); err != nil {
+			if err := c.Run(context.Background(), konk.RunCommandConfig{}); err != nil {
 				return err
 			}
 		}
