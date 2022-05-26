@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
@@ -12,6 +13,7 @@ import (
 
 type Command struct {
 	c      *exec.Cmd
+	out    strings.Builder
 	prefix string
 }
 
@@ -19,6 +21,10 @@ type CommandConfig struct {
 	Name  string
 	Args  []string
 	Label string
+}
+
+type RunCommandConfig struct {
+	AggregateOutput bool
 }
 
 func NewCommand(conf CommandConfig) *Command {
@@ -33,7 +39,7 @@ func NewCommand(conf CommandConfig) *Command {
 	}
 }
 
-func (c *Command) Run() error {
+func (c *Command) Run(conf RunCommandConfig) error {
 	stdout, err := c.c.StdoutPipe()
 	if err != nil {
 		return err
@@ -59,7 +65,13 @@ func (c *Command) Run() error {
 	go func() {
 		for {
 			t := <-out
-			fmt.Println(fmt.Sprintf("%s %s", c.prefix, t))
+			line := fmt.Sprintf("%s %s\n", c.prefix, t)
+
+			if conf.AggregateOutput {
+				c.out.WriteString(line)
+			} else {
+				fmt.Print(line)
+			}
 		}
 	}()
 
@@ -68,6 +80,10 @@ func (c *Command) Run() error {
 	}
 
 	return nil
+}
+
+func (c *Command) ReadOut() string {
+	return c.out.String()
 }
 
 func init() {

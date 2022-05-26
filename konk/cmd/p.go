@@ -8,42 +8,62 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+var aggregateOutput bool
+
 var pCommand = cobra.Command{
 	Use:   "p <command...>",
 	Short: "Run commands in parallel",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		commandStrings, commands, err := collectCommands(args)
+		cmdStrings, cmdParts, err := collectCommands(args)
 		if err != nil {
 			return err
 		}
 
-		if len(names) > 0 && len(names) != len(commands) {
+		if len(names) > 0 && len(names) != len(cmdParts) {
 			return fmt.Errorf("number of names must match number of commands")
 		}
 
-		labels := collectLabels(commandStrings)
+		labels := collectLabels(cmdStrings)
 
 		var eg errgroup.Group
 
-		for i, cmd := range commands {
+		commands := make([]*konk.Command, len(cmdParts))
+
+		for i, cmd := range cmdParts {
+			c := konk.NewCommand(konk.CommandConfig{
+				Name:  cmd[0],
+				Args:  cmd[1:],
+				Label: labels[i],
+			})
+
+			commands[i] = c
+		}
+
+		for _, cmd := range commands {
 			cmd := cmd
-			i := i
 
 			eg.Go(func() error {
-				c := konk.NewCommand(konk.CommandConfig{
-					Name:  cmd[0],
-					Args:  cmd[1:],
-					Label: labels[i],
+				return cmd.Run(konk.RunCommandConfig{
+					AggregateOutput: aggregateOutput,
 				})
-
-				return c.Run()
 			})
 		}
 
-		return eg.Wait()
+		if err := eg.Wait(); err != nil {
+			return err
+		}
+
+		if aggregateOutput {
+			for _, cmd := range commands {
+				fmt.Println(cmd.ReadOut())
+			}
+		}
+
+		return nil
 	},
 }
 
 func init() {
+	pCommand.Flags().BoolVarP(&aggregateOutput, "aggregate-output", "g", false, "aggregate output")
 	runCommand.AddCommand(&pCommand)
 }
