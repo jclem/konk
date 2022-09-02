@@ -27,6 +27,7 @@ type CommandConfig struct {
 
 type RunCommandConfig struct {
 	AggregateOutput bool
+	KillOnCancel    bool
 }
 
 func NewCommand(conf CommandConfig) *Command {
@@ -76,8 +77,10 @@ func (c *Command) Run(ctx context.Context, conf RunCommandConfig) error {
 		for {
 			select {
 			case <-ctx.Done():
-				syscall.Kill(-pgid, 15)
-				return
+				if conf.KillOnCancel {
+					syscall.Kill(-pgid, 15)
+					return
+				}
 			case t := <-out:
 				line := fmt.Sprintf("%s %s\n", c.prefix, t)
 
