@@ -10,7 +10,6 @@ import (
 )
 
 var aggregateOutput bool
-var continueOnError bool
 
 var pCommand = cobra.Command{
 	Use:   "p <command...>",
@@ -67,7 +66,6 @@ var pCommand = cobra.Command{
 }
 
 func init() {
-	pCommand.Flags().BoolVarP(&continueOnError, "continue-on-error", "c", false, "continue running commands after a failure")
 	pCommand.Flags().BoolVarP(&aggregateOutput, "aggregate-output", "g", false, "aggregate output")
 	runCommand.AddCommand(&pCommand)
 }

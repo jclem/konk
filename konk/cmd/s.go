@@ -30,7 +30,7 @@ var sCommand = cobra.Command{
 				Label: labels[i],
 			})
 
-			if err := c.Run(context.Background(), konk.RunCommandConfig{}); err != nil {
+			if err := c.Run(context.Background(), konk.RunCommandConfig{}); err != nil && !continueOnError {
 				return err
 			}
 		}
