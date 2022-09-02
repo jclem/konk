@@ -47,7 +47,7 @@ func collectCommands(args []string) ([]string, [][]string, error) {
 		commandStrings = append(commandStrings, cmd)
 	}
 
-	for i, cmd := range npmCmds {
+	for _, cmd := range npmCmds {
 		if strings.HasSuffix(cmd, "*") {
 			prefix := strings.TrimSuffix(cmd, "*")
 			pkgFile, err := os.ReadFile("package.json")
@@ -67,7 +67,7 @@ func collectCommands(args []string) ([]string, [][]string, error) {
 				}
 			}
 
-			sort.Sort(sort.StringSlice(matchingScripts))
+			sort.Strings(matchingScripts)
 
 			for _, script := range matchingScripts {
 				parts, err := shellwords.Parse(fmt.Sprintf("npm run %s", script))
@@ -87,8 +87,8 @@ func collectCommands(args []string) ([]string, [][]string, error) {
 			return nil, nil, err
 		}
 
-		commandStrings[i+len(args)] = cmd
-		commands[i+len(args)] = parts
+		commands = append(commands, parts)
+		commandStrings = append(commandStrings, cmd)
 	}
 
 	return commandStrings, commands, nil
