@@ -5,7 +5,9 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"os"
 	"os/exec"
+	"os/signal"
 	"strings"
 	"syscall"
 	"time"
@@ -73,9 +75,18 @@ func (c *Command) Run(ctx context.Context, conf RunCommandConfig) error {
 		done <- true
 	}()
 
+	sigchan := make(chan os.Signal, 1)
+	signal.Notify(sigchan,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+		syscall.SIGQUIT)
+
 	go func() {
 		for {
 			select {
+			case <-sigchan:
+				syscall.Kill(-pgid, 15)
+				return
 			case <-ctx.Done():
 				if conf.KillOnCancel {
 					syscall.Kill(-pgid, 15)
