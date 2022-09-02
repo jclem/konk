@@ -5,9 +5,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
-	"os"
 	"os/exec"
-	"os/signal"
 	"strings"
 	"syscall"
 	"time"
@@ -55,15 +53,7 @@ func (c *Command) Run(ctx context.Context, conf RunCommandConfig) error {
 	done := make(chan bool)
 	scanner := bufio.NewScanner(stdout)
 
-	// I don't quite understand this or the syscall.Kill below.
-	c.c.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-
 	if err := c.c.Start(); err != nil {
-		return err
-	}
-
-	pgid, err := syscall.Getpgid(c.c.Process.Pid)
-	if err != nil {
 		return err
 	}
 
@@ -75,21 +65,12 @@ func (c *Command) Run(ctx context.Context, conf RunCommandConfig) error {
 		done <- true
 	}()
 
-	sigchan := make(chan os.Signal, 1)
-	signal.Notify(sigchan,
-		syscall.SIGINT,
-		syscall.SIGTERM,
-		syscall.SIGQUIT)
-
 	go func() {
 		for {
 			select {
-			case <-sigchan:
-				syscall.Kill(-pgid, 15)
-				return
 			case <-ctx.Done():
 				if conf.KillOnCancel {
-					syscall.Kill(-pgid, 15)
+					c.c.Process.Signal(syscall.SIGINT)
 					return
 				}
 			case t := <-out:
