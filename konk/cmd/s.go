@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/jclem/konk/konk"
+	"github.com/jclem/konk/konk/debugger"
 	"github.com/mattn/go-shellwords"
 	"github.com/spf13/cobra"
 )
@@ -14,18 +15,21 @@ var sCommand = cobra.Command{
 	Use:   "s <command...>",
 	Short: "Run commands in serial",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		dbg := debugger.Get(cmd.Context())
+		dbg.Flags(cmd)
+
 		if workingDirectory != "" {
 			if err := os.Chdir(workingDirectory); err != nil {
 				return err
 			}
 		}
 
-		commandStrings, commands, err := collectCommands(args)
+		commandStrings, cmdParts, err := collectCommands(args)
 		if err != nil {
 			return err
 		}
 
-		if len(names) > 0 && len(names) != len(commands) {
+		if len(names) > 0 && len(names) != len(cmdParts) {
 			return fmt.Errorf("number of names must match number of commands")
 		}
 
@@ -33,7 +37,9 @@ var sCommand = cobra.Command{
 
 		var cmdErr error
 
-		for i, cmd := range commands {
+		commands := make([]*konk.Command, len(cmdParts))
+
+		for i, cmd := range cmdParts {
 			var c *konk.Command
 
 			if noShell {
@@ -55,6 +61,12 @@ var sCommand = cobra.Command{
 				})
 			}
 
+			commands[i] = c
+		}
+
+		dbg.Prettyln(commands)
+
+		for _, c := range commands {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 

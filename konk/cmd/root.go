@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"context"
 	"os"
 
+	"github.com/jclem/konk/konk/debugger"
 	"github.com/spf13/cobra"
 )
 
@@ -20,8 +22,9 @@ var rootCmd = cobra.Command{
 
 func Execute() {
 	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "D", false, "debug mode")
+	ctx := debugger.WithDebugger(context.Background(), &debug)
 
-	if err := rootCmd.Execute(); err != nil {
+	if err := rootCmd.ExecuteContext(ctx); err != nil {
 		os.Exit(1)
 	}
 }

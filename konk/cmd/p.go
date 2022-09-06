@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/jclem/konk/konk"
+	"github.com/jclem/konk/konk/debugger"
 	"github.com/mattn/go-shellwords"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
@@ -17,6 +18,9 @@ var pCommand = cobra.Command{
 	Use:   "p <command...>",
 	Short: "Run commands in parallel",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		dbg := debugger.Get(cmd.Context())
+		dbg.Flags(cmd)
+
 		if workingDirectory != "" {
 			if err := os.Chdir(workingDirectory); err != nil {
 				return err
@@ -34,7 +38,7 @@ var pCommand = cobra.Command{
 
 		labels := collectLabels(cmdStrings)
 
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx, cancel := context.WithCancel(cmd.Context())
 		defer cancel()
 
 		eg, ctx := errgroup.WithContext(ctx)
@@ -65,6 +69,8 @@ var pCommand = cobra.Command{
 
 			commands[i] = c
 		}
+
+		dbg.Prettyln(commands)
 
 		for _, cmd := range commands {
 			cmd := cmd
