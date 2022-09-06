@@ -15,9 +15,9 @@ import (
 var aggregateOutput bool
 
 var cCommand = cobra.Command{
-	Use:     "c{oncurrently} <command...>",
+	Use:     "concurrently <command...>",
 	Aliases: []string{"c"},
-	Short:   "Run commands concurrently",
+	Short:   "Run commands concurrently (alias: c)",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		dbg := debugger.Get(cmd.Context())
 		dbg.Flags(cmd)
@@ -57,14 +57,16 @@ var cCommand = cobra.Command{
 				}
 
 				c = konk.NewCommand(konk.CommandConfig{
-					Name:  parts[0],
-					Args:  parts[1:],
-					Label: labels[i],
+					Name:    parts[0],
+					Args:    parts[1:],
+					Label:   labels[i],
+					NoColor: noColor,
 				})
 			} else {
 				c = konk.NewShellCommand(konk.ShellCommandConfig{
 					Command: cmd,
 					Label:   labels[i],
+					NoColor: noColor,
 				})
 			}
 

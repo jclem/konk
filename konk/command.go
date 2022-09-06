@@ -27,13 +27,12 @@ type RunCommandConfig struct {
 type ShellCommandConfig struct {
 	Command string
 	Label   string
+	NoColor bool
 }
 
 func NewShellCommand(conf ShellCommandConfig) *Command {
 	c := exec.Command("/bin/sh", "-c", conf.Command)
-	prefixColor := rand.Intn(16) + 1
-	prefixStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(fmt.Sprint(prefixColor)))
-	prefix := prefixStyle.Render(fmt.Sprintf("[%s]", conf.Label))
+	prefix := getPrefix(conf.Label, conf.NoColor)
 
 	return &Command{
 		c:      c,
@@ -42,16 +41,15 @@ func NewShellCommand(conf ShellCommandConfig) *Command {
 }
 
 type CommandConfig struct {
-	Name  string
-	Args  []string
-	Label string
+	Name    string
+	Args    []string
+	Label   string
+	NoColor bool
 }
 
 func NewCommand(conf CommandConfig) *Command {
 	c := exec.Command(conf.Name, conf.Args...)
-	prefixColor := rand.Intn(16) + 1
-	prefixStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(fmt.Sprint(prefixColor)))
-	prefix := prefixStyle.Render(fmt.Sprintf("[%s]", conf.Label))
+	prefix := getPrefix(conf.Label, conf.NoColor)
 
 	return &Command{
 		c:      c,
@@ -143,4 +141,19 @@ func newExitError(label string, err error) error {
 func init() {
 	// Seed random for random prefix colors.
 	rand.Seed(time.Now().UnixNano())
+}
+
+func getPrefix(label string, noColor bool) string {
+
+	var prefix string
+
+	if noColor {
+		prefix = fmt.Sprintf("[%s]", label)
+	} else {
+		prefixColor := rand.Intn(16) + 1
+		prefixStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(fmt.Sprint(prefixColor)))
+		prefix = prefixStyle.Render(fmt.Sprintf("[%s]", label))
+	}
+
+	return prefix
 }

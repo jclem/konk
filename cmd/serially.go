@@ -12,9 +12,9 @@ import (
 )
 
 var sCommand = cobra.Command{
-	Use:     "s{erially} <command...>",
+	Use:     "serially <command...>",
 	Aliases: []string{"s"},
-	Short:   "Run commands serially",
+	Short:   "Run commands serially (alias: s)",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		dbg := debugger.Get(cmd.Context())
 		dbg.Flags(cmd)
@@ -51,14 +51,16 @@ var sCommand = cobra.Command{
 				}
 
 				c = konk.NewCommand(konk.CommandConfig{
-					Name:  parts[0],
-					Args:  parts[1:],
-					Label: labels[i],
+					Name:    parts[0],
+					Args:    parts[1:],
+					Label:   labels[i],
+					NoColor: noColor,
 				})
 			} else {
 				c = konk.NewShellCommand(konk.ShellCommandConfig{
 					Command: cmd,
 					Label:   labels[i],
+					NoColor: noColor,
 				})
 			}
 

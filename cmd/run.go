@@ -16,6 +16,7 @@ var names []string
 var continueOnError bool
 var noShell bool
 var workingDirectory string
+var noColor bool
 
 var runCommand = cobra.Command{
 	Use:   "run <subcommand>",
@@ -34,6 +35,7 @@ func init() {
 	runCommand.PersistentFlags().BoolVarP(&noShell, "no-subshell", "S", false, "do not run commands in a subshell")
 	runCommand.PersistentFlags().StringArrayVarP(&npmCmds, "npm", "n", []string{}, "npm command")
 	runCommand.PersistentFlags().StringArrayVarP(&names, "label", "l", []string{}, "label prefix for the command")
+	runCommand.PersistentFlags().BoolVarP(&noColor, "no-color", "C", false, "do not colorize label output")
 	rootCmd.AddCommand(&runCommand)
 }
 
