@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/jclem/konk/konk"
+	"github.com/mattn/go-shellwords"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
 )
@@ -38,10 +39,26 @@ var pCommand = cobra.Command{
 		commands := make([]*konk.Command, len(cmdParts))
 
 		for i, cmd := range cmdParts {
-			c := konk.NewCommand(konk.CommandConfig{
-				Command: cmd,
-				Label:   labels[i],
-			})
+			var c *konk.Command
+
+			if noShell {
+				parts, err := shellwords.Parse(cmd)
+
+				if err != nil {
+					return err
+				}
+
+				c = konk.NewCommand(konk.CommandConfig{
+					Name:  parts[0],
+					Args:  parts[1:],
+					Label: labels[i],
+				})
+			} else {
+				c = konk.NewShellCommand(konk.ShellCommandConfig{
+					Command: cmd,
+					Label:   labels[i],
+				})
+			}
 
 			commands[i] = c
 		}

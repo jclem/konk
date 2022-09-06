@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/jclem/konk/konk"
+	"github.com/mattn/go-shellwords"
 	"github.com/spf13/cobra"
 )
 
@@ -31,10 +32,26 @@ var sCommand = cobra.Command{
 		labels := collectLabels(commandStrings)
 
 		for i, cmd := range commands {
-			c := konk.NewCommand(konk.CommandConfig{
-				Command: cmd,
-				Label:   labels[i],
-			})
+			var c *konk.Command
+
+			if noShell {
+				parts, err := shellwords.Parse(cmd)
+
+				if err != nil {
+					return err
+				}
+
+				c = konk.NewCommand(konk.CommandConfig{
+					Name:  parts[0],
+					Args:  parts[1:],
+					Label: labels[i],
+				})
+			} else {
+				c = konk.NewShellCommand(konk.ShellCommandConfig{
+					Command: cmd,
+					Label:   labels[i],
+				})
+			}
 
 			if err := c.Run(context.Background(), konk.RunCommandConfig{}); err != nil && !continueOnError {
 				return err

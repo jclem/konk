@@ -19,18 +19,36 @@ type Command struct {
 	prefix string
 }
 
-type CommandConfig struct {
-	Command string
-	Label   string
-}
-
 type RunCommandConfig struct {
 	AggregateOutput bool
 	KillOnCancel    bool
 }
 
-func NewCommand(conf CommandConfig) *Command {
+type ShellCommandConfig struct {
+	Command string
+	Label   string
+}
+
+func NewShellCommand(conf ShellCommandConfig) *Command {
 	c := exec.Command("/bin/sh", "-c", conf.Command)
+	prefixColor := rand.Intn(16) + 1
+	prefixStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(fmt.Sprint(prefixColor)))
+	prefix := prefixStyle.Render(fmt.Sprintf("[%s]", conf.Label))
+
+	return &Command{
+		c:      c,
+		prefix: prefix,
+	}
+}
+
+type CommandConfig struct {
+	Name  string
+	Args  []string
+	Label string
+}
+
+func NewCommand(conf CommandConfig) *Command {
+	c := exec.Command(conf.Name, conf.Args...)
 	prefixColor := rand.Intn(16) + 1
 	prefixStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(fmt.Sprint(prefixColor)))
 	prefix := prefixStyle.Render(fmt.Sprintf("[%s]", conf.Label))
