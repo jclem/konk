@@ -15,7 +15,7 @@ var rootCmd = cobra.Command{
 }
 
 func Execute() {
-	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "x", false, "debug mode")
+	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "D", false, "debug mode")
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
