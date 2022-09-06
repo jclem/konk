@@ -28,12 +28,12 @@ var runCommand = cobra.Command{
 }
 
 func init() {
-	runCommand.PersistentFlags().StringVarP(&workingDirectory, "working-directory", "w", "", "working directory")
+	runCommand.PersistentFlags().StringVarP(&workingDirectory, "working-directory", "w", "", "set the working directory for all commands")
 	runCommand.PersistentFlags().BoolVarP(&continueOnError, "continue-on-error", "c", false, "continue running commands after a failure")
-	runCommand.PersistentFlags().BoolVarP(&cmdAsLabel, "command-as-label", "L", false, "use command as label")
-	runCommand.PersistentFlags().BoolVar(&noShell, "no-shell", false, "do not run commands in a subshell")
-	runCommand.PersistentFlags().StringArrayVar(&npmCmds, "npm", []string{}, "npm command")
-	runCommand.PersistentFlags().StringArrayVarP(&names, "name", "n", []string{}, "name prefix for the command")
+	runCommand.PersistentFlags().BoolVarP(&cmdAsLabel, "command-as-label", "L", false, "use each command as its own label")
+	runCommand.PersistentFlags().BoolVarP(&noShell, "no-subshell", "S", false, "do not run commands in a subshell")
+	runCommand.PersistentFlags().StringArrayVarP(&npmCmds, "npm", "n", []string{}, "npm command")
+	runCommand.PersistentFlags().StringArrayVarP(&names, "label", "l", []string{}, "label prefix for the command")
 	rootCmd.AddCommand(&runCommand)
 }
 

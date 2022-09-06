@@ -94,6 +94,6 @@ var pCommand = cobra.Command{
 }
 
 func init() {
-	pCommand.Flags().BoolVarP(&aggregateOutput, "aggregate-output", "g", false, "aggregate output")
+	pCommand.Flags().BoolVarP(&aggregateOutput, "aggregate-output", "g", false, "aggregate command output")
 	runCommand.AddCommand(&pCommand)
 }
