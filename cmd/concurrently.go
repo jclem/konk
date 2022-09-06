@@ -15,7 +15,7 @@ import (
 var aggregateOutput bool
 
 var cCommand = cobra.Command{
-	Use:     "concurrently <command...>",
+	Use:     "c{oncurrently} <command...>",
 	Aliases: []string{"c"},
 	Short:   "Run commands concurrently",
 	RunE: func(cmd *cobra.Command, args []string) error {

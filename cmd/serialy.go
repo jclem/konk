@@ -12,7 +12,7 @@ import (
 )
 
 var sCommand = cobra.Command{
-	Use:     "serially <command...>",
+	Use:     "s{erially} <command...>",
 	Aliases: []string{"s"},
 	Short:   "Run commands serially",
 	RunE: func(cmd *cobra.Command, args []string) error {
