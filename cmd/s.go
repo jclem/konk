@@ -13,7 +13,7 @@ import (
 
 var sCommand = cobra.Command{
 	Use:   "s <command...>",
-	Short: "Run commands in serial",
+	Short: "Run commands serially",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		dbg := debugger.Get(cmd.Context())
 		dbg.Flags(cmd)

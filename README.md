@@ -1,13 +1,13 @@
 # Konk
 
-Konk runs a series of commands in serial or concurrently. It is especially
+Konk runs a series of commands serially or concurrently. It is especially
 well-suited to running multiple npm scripts.
 
 ## Why?
 
 There are two npm packages I frequently already use for running npm scripts
 serially or concurrently: `npm-run-all` and `concurrently`. I built konk because
-I wanted something that could run in serial and concurrently and did not need to
+I wanted something that could run serially and concurrently and did not need to
 be installed as an npm package. In addition, I have always been curious how to
 build such a command line interface, so this is also a learning exercise for me.
 
@@ -24,7 +24,7 @@ $ go install github.com/jclem/konk@latest
 
 ## Usage
 
-Run some commands in serial, one after the other. They will be run in the order
+Run some commands serially, one after the other. They will be run in the order
 they're presented in the command line interface.
 
 ```shell

@@ -19,7 +19,7 @@ var workingDirectory string
 
 var runCommand = cobra.Command{
 	Use:   "run <subcommand>",
-	Short: "Run commands in serial or concurrently",
+	Short: "Run commands serially or concurrently",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		_ = cmd.Help()
 		os.Exit(1)
