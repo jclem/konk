@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "search:react": "npm search react",
+    "search:react": "npm searchs react",
     "search:react-dom": "npm search react-dom"
   }
 }

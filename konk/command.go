@@ -114,6 +114,9 @@ func (c *Command) Run(ctx context.Context, cancel context.CancelFunc, conf RunCo
 		return err
 	}
 
+	// Flush remainder of scanner
+	<-done
+
 	return nil
 }
 

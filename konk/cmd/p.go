@@ -77,14 +77,16 @@ var pCommand = cobra.Command{
 			})
 		}
 
-		if err := eg.Wait(); err != nil {
-			return err
-		}
+		waitErr := eg.Wait()
 
 		if aggregateOutput {
 			for _, cmd := range commands {
 				fmt.Print(cmd.ReadOut())
 			}
+		}
+
+		if waitErr != nil {
+			return waitErr
 		}
 
 		return nil
