@@ -103,6 +103,10 @@ func (c *Command) Run(ctx context.Context, conf RunCommandConfig) error {
 	}()
 
 	if err := c.c.Wait(); err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			return newExitError(c.prefix, exitErr)
+		}
+
 		return err
 	}
 
@@ -111,6 +115,22 @@ func (c *Command) Run(ctx context.Context, conf RunCommandConfig) error {
 
 func (c *Command) ReadOut() string {
 	return c.out.String()
+}
+
+type ExitError struct {
+	label string
+	err   error
+}
+
+func (e *ExitError) Error() string {
+	return fmt.Sprintf("%s exited with error: %s", e.label, e.err)
+}
+
+func newExitError(label string, err error) error {
+	return &ExitError{
+		label: label,
+		err:   err,
+	}
 }
 
 func init() {
