@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/jclem/konk/konk"
 	"github.com/spf13/cobra"
@@ -12,6 +13,12 @@ var sCommand = cobra.Command{
 	Use:   "s <command...>",
 	Short: "Run commands in serial",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if workingDirectory != "" {
+			if err := os.Chdir(workingDirectory); err != nil {
+				return err
+			}
+		}
+
 		commandStrings, commands, err := collectCommands(args)
 		if err != nil {
 			return err

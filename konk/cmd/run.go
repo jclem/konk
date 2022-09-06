@@ -15,6 +15,7 @@ var cmdAsLabel bool
 var npmCmds []string
 var names []string
 var continueOnError bool
+var workingDirectory string
 
 var runCommand = cobra.Command{
 	Use:   "run <subcommand>",
@@ -27,6 +28,7 @@ var runCommand = cobra.Command{
 }
 
 func init() {
+	runCommand.PersistentFlags().StringVarP(&workingDirectory, "working-directory", "w", "", "working directory")
 	runCommand.PersistentFlags().BoolVarP(&continueOnError, "continue-on-error", "c", false, "continue running commands after a failure")
 	runCommand.PersistentFlags().BoolVarP(&cmdAsLabel, "command-as-label", "L", false, "use command as label")
 	runCommand.PersistentFlags().StringArrayVar(&npmCmds, "npm", []string{}, "npm command")

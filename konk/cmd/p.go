@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/jclem/konk/konk"
 	"github.com/spf13/cobra"
@@ -15,6 +16,12 @@ var pCommand = cobra.Command{
 	Use:   "p <command...>",
 	Short: "Run commands in parallel",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if workingDirectory != "" {
+			if err := os.Chdir(workingDirectory); err != nil {
+				return err
+			}
+		}
+
 		cmdStrings, cmdParts, err := collectCommands(args)
 		if err != nil {
 			return err
