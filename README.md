@@ -19,7 +19,7 @@ in your package.json file.
 ## Installation
 
 ```shell
-$ go install github.com/jclem/konk@latest
+$ go install github.com/jclem/konk@v0.0.1
 ```
 
 ## Usage
