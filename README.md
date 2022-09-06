@@ -36,7 +36,7 @@ $ konk run s 'echo hello' 'echo world'
 Run some commands concurrently (notice the interleaved output).
 
 ```shell
-$ konk run p ls ls
+$ konk run c ls ls
 [1] README.md
 [1] bin
 [1] go.mod
@@ -67,7 +67,7 @@ given these scripts:
 You can run all three concurrently with with `--npm` flags:
 
 ```shell
-$ konk run p --npm 'check:format' --npm 'check:lint' --npm 'check:types'
+$ konk run c --npm 'check:format' --npm 'check:lint' --npm 'check:types'
 [2]
 [2] > check:lint
 [2] > eslint .
@@ -85,7 +85,7 @@ $ konk run p --npm 'check:format' --npm 'check:lint' --npm 'check:types'
 Or, you can use a glob-like pattern for brevity:
 
 ```shell
-$ konk run p --npm 'check:*'
+$ konk run c --npm 'check:*'
 [2]
 [2] > check:lint
 [2] > eslint .
@@ -104,7 +104,7 @@ If you want to run commands concurrently but want to ensure output is not
 interleaved, use the `-g`/`--aggregate-output` flag:
 
 ```shell
-$ konk run p -g --npm 'check:*'
+$ konk run c -g --npm 'check:*'
 [0]
 [0] > check:build
 [0] > tsc --noEmit
@@ -123,7 +123,7 @@ You can also use the `-L`/`--command-as-label` flag to use the command itself as
 the process label:
 
 ```shell
-$ konk run p -gL --npm 'check:*'
+$ konk run c -gL --npm 'check:*'
 [check:build ]
 [check:build ] > check:build
 [check:build ] > tsc --noEmit
