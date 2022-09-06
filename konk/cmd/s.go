@@ -31,6 +31,8 @@ var sCommand = cobra.Command{
 
 		labels := collectLabels(commandStrings)
 
+		var cmdErr error
+
 		for i, cmd := range commands {
 			var c *konk.Command
 
@@ -53,12 +55,18 @@ var sCommand = cobra.Command{
 				})
 			}
 
-			if err := c.Run(context.Background(), konk.RunCommandConfig{}); err != nil && !continueOnError {
+			err := c.Run(context.Background(), konk.RunCommandConfig{})
+
+			if err != nil && !continueOnError {
 				return err
+			}
+
+			if err != nil {
+				cmdErr = err
 			}
 		}
 
-		return nil
+		return cmdErr
 	},
 }
 
