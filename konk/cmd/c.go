@@ -14,9 +14,9 @@ import (
 
 var aggregateOutput bool
 
-var pCommand = cobra.Command{
-	Use:   "p <command...>",
-	Short: "Run commands in parallel",
+var cCommand = cobra.Command{
+	Use:   "c <command...>",
+	Short: "Run commands concurrently",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		dbg := debugger.Get(cmd.Context())
 		dbg.Flags(cmd)
@@ -100,6 +100,6 @@ var pCommand = cobra.Command{
 }
 
 func init() {
-	pCommand.Flags().BoolVarP(&aggregateOutput, "aggregate-output", "g", false, "aggregate command output")
-	runCommand.AddCommand(&pCommand)
+	cCommand.Flags().BoolVarP(&aggregateOutput, "aggregate-output", "g", false, "aggregate command output")
+	runCommand.AddCommand(&cCommand)
 }
