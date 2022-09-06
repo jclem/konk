@@ -21,7 +21,7 @@ var runCommand = cobra.Command{
 	Use:   "run <subcommand>",
 	Short: "Run commands in serial or concurrently",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cmd.Help()
+		_ = cmd.Help()
 		os.Exit(1)
 		return nil
 	},

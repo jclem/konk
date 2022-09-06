@@ -87,7 +87,7 @@ func (c *Command) Run(ctx context.Context, cancel context.CancelFunc, conf RunCo
 			select {
 			case <-ctx.Done():
 				if conf.KillOnCancel {
-					c.c.Process.Signal(syscall.SIGTERM)
+					_ = c.c.Process.Signal(syscall.SIGTERM)
 					return
 				}
 			case t := <-out:
