@@ -20,9 +20,8 @@ type Command struct {
 }
 
 type CommandConfig struct {
-	Name  string
-	Args  []string
-	Label string
+	Command string
+	Label   string
 }
 
 type RunCommandConfig struct {
@@ -31,7 +30,7 @@ type RunCommandConfig struct {
 }
 
 func NewCommand(conf CommandConfig) *Command {
-	c := exec.Command(conf.Name, conf.Args...)
+	c := exec.Command("/bin/sh", "-c", conf.Command)
 	prefixColor := rand.Intn(16) + 1
 	prefixStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(fmt.Sprint(prefixColor)))
 	prefix := prefixStyle.Render(fmt.Sprintf("[%s]", conf.Label))

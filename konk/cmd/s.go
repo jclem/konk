@@ -32,9 +32,8 @@ var sCommand = cobra.Command{
 
 		for i, cmd := range commands {
 			c := konk.NewCommand(konk.CommandConfig{
-				Name:  cmd[0],
-				Args:  cmd[1:],
-				Label: labels[i],
+				Command: cmd,
+				Label:   labels[i],
 			})
 
 			if err := c.Run(context.Background(), konk.RunCommandConfig{}); err != nil && !continueOnError {

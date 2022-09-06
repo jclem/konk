@@ -7,7 +7,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/mattn/go-shellwords"
 	"github.com/spf13/cobra"
 )
 
@@ -36,19 +35,13 @@ func init() {
 	rootCmd.AddCommand(&runCommand)
 }
 
-func collectCommands(args []string) ([]string, [][]string, error) {
+func collectCommands(args []string) ([]string, []string, error) {
 	commandStrings := []string{}
-	commands := [][]string{}
+	commands := []string{}
 
 	for _, cmd := range args {
-		parts, err := shellwords.Parse(cmd)
-
-		if err != nil {
-			return nil, nil, err
-		}
-
-		commands = append(commands, parts)
 		commandStrings = append(commandStrings, cmd)
+		commands = append(commands, cmd)
 	}
 
 	for _, cmd := range npmCmds {
@@ -74,25 +67,16 @@ func collectCommands(args []string) ([]string, [][]string, error) {
 			sort.Strings(matchingScripts)
 
 			for _, script := range matchingScripts {
-				parts, err := shellwords.Parse(fmt.Sprintf("npm run %s", script))
-				if err != nil {
-					return nil, nil, err
-				}
-				commands = append(commands, parts)
 				commandStrings = append(commandStrings, script)
+				commands = append(commands, fmt.Sprintf("npm run %s", script))
 			}
 
 			continue
 		}
 
-		parts, err := shellwords.Parse(fmt.Sprintf("npm run %s", cmd))
-
-		if err != nil {
-			return nil, nil, err
-		}
-
-		commands = append(commands, parts)
+		script := fmt.Sprintf("npm run %s", cmd)
 		commandStrings = append(commandStrings, cmd)
+		commands = append(commands, script)
 	}
 
 	return commandStrings, commands, nil

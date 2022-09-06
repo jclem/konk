@@ -39,9 +39,8 @@ var pCommand = cobra.Command{
 
 		for i, cmd := range cmdParts {
 			c := konk.NewCommand(konk.CommandConfig{
-				Name:  cmd[0],
-				Args:  cmd[1:],
-				Label: labels[i],
+				Command: cmd,
+				Label:   labels[i],
 			})
 
 			commands[i] = c
