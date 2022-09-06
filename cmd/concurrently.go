@@ -9,11 +9,15 @@ import (
 	"github.com/jclem/konk/konk/debugger"
 	"github.com/mattn/go-shellwords"
 	"github.com/spf13/cobra"
+	"golang.org/x/sync/errgroup"
 )
 
-var sCommand = cobra.Command{
-	Use:   "s <command...>",
-	Short: "Run commands serially",
+var aggregateOutput bool
+
+var cCommand = cobra.Command{
+	Use:     "concurrently <command...>",
+	Aliases: []string{"c"},
+	Short:   "Run commands concurrently",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		dbg := debugger.Get(cmd.Context())
 		dbg.Flags(cmd)
@@ -24,7 +28,7 @@ var sCommand = cobra.Command{
 			}
 		}
 
-		commandStrings, cmdParts, err := collectCommands(args)
+		cmdStrings, cmdParts, err := collectCommands(args)
 		if err != nil {
 			return err
 		}
@@ -33,9 +37,12 @@ var sCommand = cobra.Command{
 			return fmt.Errorf("number of names must match number of commands")
 		}
 
-		labels := collectLabels(commandStrings)
+		labels := collectLabels(cmdStrings)
 
-		var cmdErr error
+		ctx, cancel := context.WithCancel(cmd.Context())
+		defer cancel()
+
+		eg, ctx := errgroup.WithContext(ctx)
 
 		commands := make([]*konk.Command, len(cmdParts))
 
@@ -66,25 +73,34 @@ var sCommand = cobra.Command{
 
 		dbg.Prettyln(commands)
 
-		for _, c := range commands {
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+		for _, cmd := range commands {
+			cmd := cmd
 
-			err := c.Run(ctx, cancel, konk.RunCommandConfig{})
+			eg.Go(func() error {
+				return cmd.Run(ctx, cancel, konk.RunCommandConfig{
+					AggregateOutput: aggregateOutput,
+					KillOnCancel:    !continueOnError,
+				})
+			})
+		}
 
-			if err != nil && !continueOnError {
-				return err
-			}
+		waitErr := eg.Wait()
 
-			if err != nil {
-				cmdErr = err
+		if aggregateOutput {
+			for _, cmd := range commands {
+				fmt.Print(cmd.ReadOut())
 			}
 		}
 
-		return cmdErr
+		if waitErr != nil {
+			return waitErr
+		}
+
+		return nil
 	},
 }
 
 func init() {
-	runCommand.AddCommand(&sCommand)
+	cCommand.Flags().BoolVarP(&aggregateOutput, "aggregate-output", "g", false, "aggregate command output")
+	runCommand.AddCommand(&cCommand)
 }

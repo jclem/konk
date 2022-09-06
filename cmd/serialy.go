@@ -9,14 +9,12 @@ import (
 	"github.com/jclem/konk/konk/debugger"
 	"github.com/mattn/go-shellwords"
 	"github.com/spf13/cobra"
-	"golang.org/x/sync/errgroup"
 )
 
-var aggregateOutput bool
-
-var cCommand = cobra.Command{
-	Use:   "c <command...>",
-	Short: "Run commands concurrently",
+var sCommand = cobra.Command{
+	Use:     "serially <command...>",
+	Aliases: []string{"s"},
+	Short:   "Run commands serially",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		dbg := debugger.Get(cmd.Context())
 		dbg.Flags(cmd)
@@ -27,7 +25,7 @@ var cCommand = cobra.Command{
 			}
 		}
 
-		cmdStrings, cmdParts, err := collectCommands(args)
+		commandStrings, cmdParts, err := collectCommands(args)
 		if err != nil {
 			return err
 		}
@@ -36,12 +34,9 @@ var cCommand = cobra.Command{
 			return fmt.Errorf("number of names must match number of commands")
 		}
 
-		labels := collectLabels(cmdStrings)
+		labels := collectLabels(commandStrings)
 
-		ctx, cancel := context.WithCancel(cmd.Context())
-		defer cancel()
-
-		eg, ctx := errgroup.WithContext(ctx)
+		var cmdErr error
 
 		commands := make([]*konk.Command, len(cmdParts))
 
@@ -72,34 +67,25 @@ var cCommand = cobra.Command{
 
 		dbg.Prettyln(commands)
 
-		for _, cmd := range commands {
-			cmd := cmd
+		for _, c := range commands {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
 
-			eg.Go(func() error {
-				return cmd.Run(ctx, cancel, konk.RunCommandConfig{
-					AggregateOutput: aggregateOutput,
-					KillOnCancel:    !continueOnError,
-				})
-			})
-		}
+			err := c.Run(ctx, cancel, konk.RunCommandConfig{})
 
-		waitErr := eg.Wait()
+			if err != nil && !continueOnError {
+				return err
+			}
 
-		if aggregateOutput {
-			for _, cmd := range commands {
-				fmt.Print(cmd.ReadOut())
+			if err != nil {
+				cmdErr = err
 			}
 		}
 
-		if waitErr != nil {
-			return waitErr
-		}
-
-		return nil
+		return cmdErr
 	},
 }
 
 func init() {
-	cCommand.Flags().BoolVarP(&aggregateOutput, "aggregate-output", "g", false, "aggregate command output")
-	runCommand.AddCommand(&cCommand)
+	runCommand.AddCommand(&sCommand)
 }
