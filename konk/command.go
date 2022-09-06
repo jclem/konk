@@ -59,7 +59,7 @@ func NewCommand(conf CommandConfig) *Command {
 	}
 }
 
-func (c *Command) Run(ctx context.Context, conf RunCommandConfig) error {
+func (c *Command) Run(ctx context.Context, cancel context.CancelFunc, conf RunCommandConfig) error {
 	stdout, err := c.c.StdoutPipe()
 	if err != nil {
 		return err
@@ -87,7 +87,7 @@ func (c *Command) Run(ctx context.Context, conf RunCommandConfig) error {
 			select {
 			case <-ctx.Done():
 				if conf.KillOnCancel {
-					c.c.Process.Signal(syscall.SIGINT)
+					c.c.Process.Signal(syscall.SIGTERM)
 					return
 				}
 			case t := <-out:
@@ -103,8 +103,12 @@ func (c *Command) Run(ctx context.Context, conf RunCommandConfig) error {
 	}()
 
 	if err := c.c.Wait(); err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok {
-			return newExitError(c.prefix, exitErr)
+		cancel()
+
+		if execExitErr, ok := err.(*exec.ExitError); ok {
+			exitErr := newExitError(c.prefix, execExitErr)
+			fmt.Println(exitErr)
+			return exitErr
 		}
 
 		return err

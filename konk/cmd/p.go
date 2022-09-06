@@ -34,7 +34,10 @@ var pCommand = cobra.Command{
 
 		labels := collectLabels(cmdStrings)
 
-		eg, ctx := errgroup.WithContext(context.Background())
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		eg, ctx := errgroup.WithContext(ctx)
 
 		commands := make([]*konk.Command, len(cmdParts))
 
@@ -67,7 +70,7 @@ var pCommand = cobra.Command{
 			cmd := cmd
 
 			eg.Go(func() error {
-				return cmd.Run(ctx, konk.RunCommandConfig{
+				return cmd.Run(ctx, cancel, konk.RunCommandConfig{
 					AggregateOutput: aggregateOutput,
 					KillOnCancel:    !continueOnError,
 				})

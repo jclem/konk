@@ -55,7 +55,10 @@ var sCommand = cobra.Command{
 				})
 			}
 
-			err := c.Run(context.Background(), konk.RunCommandConfig{})
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			err := c.Run(ctx, cancel, konk.RunCommandConfig{})
 
 			if err != nil && !continueOnError {
 				return err
