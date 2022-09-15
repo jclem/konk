@@ -4,7 +4,7 @@ const path = require('node:path')
 
 const archMap = {
   ia32: '386',
-  x64: 'amd64',
+  x64: 'amd64_v1',
   arm64: 'arm64'
 }
 
