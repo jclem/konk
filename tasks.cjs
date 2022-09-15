@@ -1,7 +1,6 @@
 const pkg = require('./package.json')
 const fs = require('node:fs')
 const path = require('node:path')
-const {execSync} = require('node:child_process')
 
 const archMap = {
   ia32: '386',
@@ -31,26 +30,15 @@ function install() {
     goBinary.name
   )
 
-  const binDir = getInstallationDir()
-  const dest = getInstallationPath(binDir)
+  const dest = path.join(goBinary.path, goBinary.name)
 
-  fs.mkdirSync(binDir, {recursive: true})
+  fs.mkdirSync(goBinary.path)
   fs.copyFileSync(src, dest)
 }
 
-function getInstallationDir() {
-  return execSync('npm bin').toString().trim()
-}
-
-function getInstallationPath(binDir) {
-  const {goBinary} = pkg
-  const dest = path.join(binDir, goBinary.name)
-  return dest
-}
-
 function uninstall() {
-  const binDir = getInstallationDir()
-  const dest = getInstallationPath(binDir)
+  const dest = path.join(goBinary.path, goBinary.name)
+  console.log('Removing konk binaries from', dest)
 
   fs.unlinkSync(dest)
 }

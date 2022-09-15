@@ -1,12 +1,12 @@
 {
   "name": "konk",
   "description": "A CLI for running tasks serially or concurrently",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "author": "Jonathan Clem <j@jclem.me>",
   "bugs": {
     "url": "https://github.com/jclem/konk/issues"
   },
-  "bin": "node_modules/.bin/konk",
+  "bin": {"konk": "./bin/konk"},
   "directories": {
     "example": "examples"
   },
@@ -31,7 +31,7 @@
     "url": "git+https://github.com/jclem/konk.git"
   },
   "scripts": {
-    "postinstall": "node tasks.cjs install",
+    "preinstall": "node tasks.cjs install",
     "preuninstall": "node tasks.cjs uninstall"
   }
 }
