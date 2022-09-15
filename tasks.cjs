@@ -48,7 +48,7 @@ function getInstallationPath(binDir) {
   return dest
 }
 
-async function uninstall() {
+function uninstall() {
   const binDir = getInstallationDir()
   const dest = getInstallationPath(binDir)
 
