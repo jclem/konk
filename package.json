@@ -1,0 +1,37 @@
+{
+  "name": "konk",
+  "description": "A CLI for running tasks serially or concurrently",
+  "version": "0.8.0",
+  "author": "Jonathan Clem <j@jclem.me>",
+  "bugs": {
+    "url": "https://github.com/jclem/konk/issues"
+  },
+  "bin": "node_modules/.bin/konk",
+  "directories": {
+    "example": "examples"
+  },
+  "files": [
+    "dist",
+    "tasks.cjs",
+    "LICENSE.md",
+    "README.md"
+  ],
+  "goBinary": {
+    "name": "konk",
+    "path": "./bin"
+  },
+  "homepage": "https://github.com/jclem/konk#readme",
+  "keywords": [
+    "process",
+    "task"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jclem/konk.git"
+  },
+  "scripts": {
+    "postinstall": "node tasks.cjs install",
+    "preuninstall": "node tasks.cjs uninstall"
+  }
+}
