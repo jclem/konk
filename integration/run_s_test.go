@@ -9,6 +9,8 @@ import (
 )
 
 func TestRunSerially(t *testing.T) {
+	t.Parallel()
+
 	out := new(strings.Builder)
 	cmd := exec.Command("bin/konk", "run", "serially", "echo a", "echo b", "echo c")
 	cmd.Stdout = out
@@ -23,6 +25,8 @@ func TestRunSerially(t *testing.T) {
 }
 
 func TestRunSeriallyWithLabels(t *testing.T) {
+	t.Parallel()
+
 	out := new(strings.Builder)
 	cmd := exec.Command(
 		"bin/konk", "run", "serially",
@@ -40,6 +44,8 @@ func TestRunSeriallyWithLabels(t *testing.T) {
 }
 
 func TestRunSeriallyWithLabelsMismatch(t *testing.T) {
+	t.Parallel()
+
 	out := new(strings.Builder)
 	cmd := exec.Command(
 		"bin/konk", "run", "serially",
@@ -57,6 +63,8 @@ func TestRunSeriallyWithLabelsMismatch(t *testing.T) {
 }
 
 func TestRunSeriallyWithCommandLabels(t *testing.T) {
+	t.Parallel()
+
 	out := new(strings.Builder)
 	cmd := exec.Command(
 		"bin/konk", "run", "serially", "-L",
@@ -72,6 +80,8 @@ func TestRunSeriallyWithCommandLabels(t *testing.T) {
 }
 
 func TestRunSeriallyWithNpm(t *testing.T) {
+	t.Parallel()
+
 	out := new(strings.Builder)
 	cmd := exec.Command(
 		"bin/konk", "run", "serially",
@@ -96,6 +106,8 @@ func TestRunSeriallyWithNpm(t *testing.T) {
 }
 
 func TestRunSeriallyWithNpmGlob(t *testing.T) {
+	t.Parallel()
+
 	out := new(strings.Builder)
 	cmd := exec.Command(
 		"bin/konk", "run", "serially",

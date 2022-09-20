@@ -9,6 +9,8 @@ import (
 )
 
 func TestRunConcurrently(t *testing.T) {
+	t.Parallel()
+
 	out := new(strings.Builder)
 	cmd := exec.Command("bin/konk", "run", "concurrently", "-g",
 		"echo a", "echo b", "echo c")
@@ -24,6 +26,8 @@ func TestRunConcurrently(t *testing.T) {
 }
 
 func TestRunConcurrentlyWithLabels(t *testing.T) {
+	t.Parallel()
+
 	out := new(strings.Builder)
 	cmd := exec.Command(
 		"bin/konk", "run", "concurrently", "-g",
@@ -41,6 +45,8 @@ func TestRunConcurrentlyWithLabels(t *testing.T) {
 }
 
 func TestRunConcurrentlyWithLabelsMismatch(t *testing.T) {
+	t.Parallel()
+
 	out := new(strings.Builder)
 	cmd := exec.Command(
 		"bin/konk", "run", "concurrently", "-g",
@@ -58,6 +64,8 @@ func TestRunConcurrentlyWithLabelsMismatch(t *testing.T) {
 }
 
 func TestRunConcurrentlyWithCommandLabels(t *testing.T) {
+	t.Parallel()
+
 	out := new(strings.Builder)
 	cmd := exec.Command(
 		"bin/konk", "run", "concurrently", "-gL",
@@ -73,6 +81,8 @@ func TestRunConcurrentlyWithCommandLabels(t *testing.T) {
 }
 
 func TestRunConcurrentlyWithNpm(t *testing.T) {
+	t.Parallel()
+
 	out := new(strings.Builder)
 	cmd := exec.Command(
 		"bin/konk", "run", "concurrently", "-g",
@@ -97,6 +107,8 @@ func TestRunConcurrentlyWithNpm(t *testing.T) {
 }
 
 func TestRunConcurrentlyWithNpmGlob(t *testing.T) {
+	t.Parallel()
+
 	out := new(strings.Builder)
 	cmd := exec.Command(
 		"bin/konk", "run", "concurrently", "-g",

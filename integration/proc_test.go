@@ -10,6 +10,8 @@ import (
 )
 
 func TestProc(t *testing.T) {
+	t.Parallel()
+
 	out := new(strings.Builder)
 	cmd := exec.Command(
 		"bin/konk", "proc",
@@ -31,6 +33,8 @@ func TestProc(t *testing.T) {
 }
 
 func TestProcWithExternalEnvNoEnv(t *testing.T) {
+	t.Parallel()
+
 	out := new(strings.Builder)
 	cmd := exec.Command(
 		"bin/konk", "proc", "-E",
@@ -55,6 +59,8 @@ func TestProcWithExternalEnvNoEnv(t *testing.T) {
 }
 
 func TestProcWithExternalEnvAndEnv(t *testing.T) {
+	t.Parallel()
+
 	out := new(strings.Builder)
 	cmd := exec.Command(
 		"bin/konk", "proc",
