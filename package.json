@@ -1,12 +1,14 @@
 {
   "name": "konk",
   "description": "A CLI for running tasks serially or concurrently",
-  "version": "0.18.0",
+  "version": "0.19.0",
   "author": "Jonathan Clem <j@jclem.me>",
   "bugs": {
     "url": "https://github.com/jclem/konk/issues"
   },
-  "bin": {"konk": "./bin/konk"},
+  "bin": {
+    "konk": "./bin/konk"
+  },
   "directories": {
     "example": "examples"
   },
