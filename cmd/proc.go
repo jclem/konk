@@ -1,13 +1,13 @@
 package cmd
 
 import (
+	"bufio"
 	"os"
 	"strings"
 
 	"github.com/jclem/konk/konk"
 	"github.com/jclem/konk/konk/debugger"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 )
 
 var envFile string
@@ -28,14 +28,24 @@ var procCommand = cobra.Command{
 			}
 		}
 
-		procfile, err := os.ReadFile(procfile)
+		procfile, err := os.Open(procfile)
 		if err != nil {
 			return err
 		}
+		defer procfile.Close()
 
-		var procfileMap map[string]string
-		if err := yaml.Unmarshal(procfile, &procfileMap); err != nil {
-			return err
+		procfileMap := map[string]string{}
+		scanner := bufio.NewScanner(procfile)
+
+		for scanner.Scan() {
+			procfileLine := strings.TrimSpace(scanner.Text())
+
+			if procfileLine == "" {
+				continue
+			}
+
+			line := strings.SplitN(procfileLine, ":", 2)
+			procfileMap[strings.TrimSpace(line[0])] = strings.TrimSpace(line[1])
 		}
 
 		envLines := []string{}

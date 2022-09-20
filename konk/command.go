@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"os"
 	"os/exec"
 	"strings"
 	"syscall"
@@ -51,13 +52,8 @@ type CommandConfig struct {
 }
 
 func setEnv(c *exec.Cmd, env []string) {
-	if env == nil {
-		return
-	}
-
-	for _, e := range env {
-		c.Env = append(c.Env, e)
-	}
+	c.Env = os.Environ()
+	c.Env = append(c.Env, env...)
 }
 
 func NewCommand(conf CommandConfig) *Command {
