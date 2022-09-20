@@ -7,8 +7,8 @@ builds:
     goos:
       - linux
       - darwin
-  - ldflags:
-    - -s -w -X cmd.Version={{.Version}}
+    ldflags:
+      - -s -w -X cmd.Version={{.Version}}
 archives:
   - replacements:
       darwin: macOS
