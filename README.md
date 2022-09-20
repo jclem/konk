@@ -8,18 +8,26 @@ well-suited to running multiple npm scripts.
 There are two npm packages I frequently already use for running npm scripts
 serially or concurrently: `npm-run-all` and `concurrently`. I built konk because
 I wanted something that could run serially and concurrently and did not need to
-be installed as an npm package. In addition, I have always been curious how to
-build such a command line interface, so this is also a learning exercise for me.
+be installed as an npm package (note, however, that konk *can* be installed from
+npm). In addition, I have always been curious how to build such a command line
+interface, so this is also a learning exercise for me.
 
 There are currently feature gaps between `npm-run-all` and `concurrently`, but I
-am working to fill them when I have time. Generally, I recommend using one of
-those tools, instead, in an npm project, as they can be declared as a dependency
-in your package.json file.
+am working to fill them when I have time.
 
 ## Installation
 
+Install the plain Go module:
+
 ```shell
 $ go install github.com/jclem/konk@latest
+```
+
+Or, use or install directly from npm:
+
+```shell
+$ npx konk      # Run from npm
+$ npm i -g konk # Install from npm
 ```
 
 ## Usage
@@ -51,8 +59,8 @@ $ konk run c ls ls
 [0] main.go
 ```
 
-Use the `--npm` flag to easily run scripts in your `package.json`. For example,
-given these scripts:
+Use the `-n/--npm` flag to easily run scripts in your `package.json`. For
+example, given these scripts:
 
 ```json
 {
@@ -64,7 +72,7 @@ given these scripts:
 }
 ```
 
-You can run all three concurrently with with `--npm` flags:
+You can run all three concurrently with with `-n/--npm` flags:
 
 ```shell
 $ konk run c --npm 'check:format' --npm 'check:lint' --npm 'check:types'
@@ -85,7 +93,7 @@ $ konk run c --npm 'check:format' --npm 'check:lint' --npm 'check:types'
 Or, you can use a glob-like pattern for brevity:
 
 ```shell
-$ konk run c --npm 'check:*'
+$ konk run c -n 'check:*'
 [2]
 [2] > check:lint
 [2] > eslint .
@@ -104,7 +112,7 @@ If you want to run commands concurrently but want to ensure output is not
 interleaved, use the `-g`/`--aggregate-output` flag:
 
 ```shell
-$ konk run c -g --npm 'check:*'
+$ konk run c -g -n 'check:*'
 [0]
 [0] > check:build
 [0] > tsc --noEmit
@@ -123,7 +131,27 @@ You can also use the `-L`/`--command-as-label` flag to use the command itself as
 the process label:
 
 ```shell
-$ konk run c -gL --npm 'check:*'
+$ konk run c -gL -n 'check:*'
+[check:build ]
+[check:build ] > check:build
+[check:build ] > tsc --noEmit
+[check:build ]
+[check:format]
+[check:format] > check:format
+[check:format] > prettier --loglevel warn --check .
+[check:format]
+[check:lint  ]
+[check:lint  ] > check:lint
+[check:lint  ] > eslint .
+[check:lint  ]
+```
+
+There is also a `-c/--continue-on-error` flag that will ensure other commands
+continue to run even if one fails. The default behavior is that all commands
+halt when any other command exits with a non-zero exit code.
+
+```shell
+$ konk run c -cgL -n 'check:*'
 [check:build ]
 [check:build ] > check:build
 [check:build ] > tsc --noEmit
