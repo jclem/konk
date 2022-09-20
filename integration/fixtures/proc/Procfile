@@ -1,2 +1,3 @@
 echo-a: echo $A
 echo-b: echo $B
+echo-c: echo $C
