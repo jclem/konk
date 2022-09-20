@@ -11,6 +11,7 @@ type RunConcurrentlyConfig struct {
 	Commands        []string
 	Labels          []string
 	Env             []string
+	OmitEnv         bool
 	AggregateOutput bool
 	ContinueOnError bool
 	NoColor         bool
@@ -40,6 +41,7 @@ func RunConcurrently(ctx context.Context, cfg RunConcurrentlyConfig) ([]*Command
 				Args:    parts[1:],
 				Label:   cfg.Labels[i],
 				Env:     cfg.Env,
+				OmitEnv: cfg.OmitEnv,
 				NoColor: cfg.NoColor,
 			})
 		} else {
@@ -47,6 +49,7 @@ func RunConcurrently(ctx context.Context, cfg RunConcurrentlyConfig) ([]*Command
 				Command: cmd,
 				Label:   cfg.Labels[i],
 				Env:     cfg.Env,
+				OmitEnv: cfg.OmitEnv,
 				NoColor: cfg.NoColor,
 			})
 		}

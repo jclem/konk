@@ -13,6 +13,7 @@ import (
 var envFile string
 var noEnvFile bool
 var procfile string
+var omitEnv bool
 
 var procCommand = cobra.Command{
 	Use:     "proc",
@@ -70,6 +71,7 @@ var procCommand = cobra.Command{
 			Labels:          commandLabels,
 			ContinueOnError: continueOnError,
 			Env:             envLines,
+			OmitEnv:         omitEnv,
 			NoColor:         noColor,
 			NoShell:         noShell,
 		})
@@ -90,6 +92,7 @@ func init() {
 
 	procCommand.Flags().StringVarP(&procfile, "procfile", "p", "Procfile", "Path to the Procfile")
 	procCommand.Flags().StringVarP(&envFile, "env-file", "e", ".env", "Path to the env file")
+	procCommand.Flags().BoolVar(&omitEnv, "omit-env", false, "Omit any existing runtime environment variables")
 	procCommand.Flags().BoolVarP(&noEnvFile, "no-env-file", "E", false, "Don't load the env file")
 	rootCmd.AddCommand(&procCommand)
 }
