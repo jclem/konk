@@ -8,7 +8,7 @@ builds:
       - linux
       - darwin
     ldflags:
-      - -s -w -X cmd.Version={{.Version}}
+      - -s -w -X github.com/jclem/konk/cmd.version={{.Version}}
 archives:
   - replacements:
       darwin: macOS
