@@ -1,5 +1,15 @@
 #!/bin/sh
 
+if [ -z "$GITHUB_TOKEN" ]; then
+    echo "Usage: GITHUB_TOKEN=\$github_token $0 <version>"
+    exit 1
+fi
+
+if [ -z "$1" ]; then
+    echo "Usage: GITHUB_TOKEN=\$github_token $0 <version>"
+    exit 1
+fi
+
 set -ex
 
 npm version $1 --sign-git-tag
