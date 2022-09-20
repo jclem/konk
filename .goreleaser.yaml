@@ -9,6 +9,14 @@ builds:
       - darwin
     ldflags:
       - -s -w -X github.com/jclem/konk/cmd.Version={{ .Version }} -X github.com/jclem/konk/cmd.Commit={{ .Commit }} -X github.com/jclem/konk/cmd.BuiltAt={{ .Date }}
+brews:
+  - tap:
+      owner: jclem
+      name: homebrew-tap
+    folder: Formula
+    homepage: https://github.com/jclem/konk
+    license: MIT
+    test: system "#{bin}/konk --version"
 archives:
   - replacements:
       darwin: macOS
