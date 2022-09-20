@@ -1,0 +1,6 @@
+#!/bin/sh
+
+set -ex
+
+npm version $1 --sign-git-tag
+goreleaser release --rm-dist
