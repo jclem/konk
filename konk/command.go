@@ -80,29 +80,35 @@ func (c *Command) Run(ctx context.Context, cancel context.CancelFunc, conf RunCo
 	c.c.Stderr = c.c.Stdout
 
 	out := make(chan string)
-	done := make(chan bool)
 	scanner := bufio.NewScanner(stdout)
+	scannerDone := make(chan bool)
+	scannerErr := make(chan error)
+	allDone := make(chan error)
 
 	if err := c.c.Start(); err != nil {
 		return err
 	}
 
+	// Start a goroutine to read the command's output. Send that output to the
+	// `out` channel and notify `scannerDone` when complete.
 	go func() {
 		for scanner.Scan() {
 			out <- scanner.Text()
 		}
 
-		done <- true
+		if err := scanner.Err(); err != nil {
+			scannerErr <- err
+		}
+
+		scannerDone <- true
 	}()
 
+	// Read from the `out` channel and print or aggregate output. Send a signal to
+	// `allDone` if our context is canceled, there is a scanner error, or if the
+	// scanner is done.
 	go func() {
 		for {
 			select {
-			case <-ctx.Done():
-				if conf.KillOnCancel {
-					_ = c.c.Process.Signal(syscall.SIGTERM)
-					return
-				}
 			case t := <-out:
 				line := fmt.Sprintf("%s %s\n", c.prefix, t)
 
@@ -111,9 +117,29 @@ func (c *Command) Run(ctx context.Context, cancel context.CancelFunc, conf RunCo
 				} else {
 					fmt.Print(line)
 				}
+			case <-ctx.Done():
+				if conf.KillOnCancel {
+					_ = c.c.Process.Signal(syscall.SIGTERM)
+					allDone <- nil
+					return
+				}
+			case err := <-scannerErr:
+				allDone <- err
+			case <-scannerDone:
+				allDone <- nil
 			}
 		}
 	}()
+
+	// We wait for `allDone` to ensure we have fully read the output (or
+	// encountedred an error) *before* we call `Wait()` below.
+	// SEE: https://pkg.go.dev/os/exec@go1.19.1#Cmd.StdoutPipe
+	// "Wait will close the pipe after seeing the command exit, so most callers
+	// need not close the pipe themselves. It is thus incorrect to call Wait
+	// before all reads from the pipe have completed."
+	if err := <-allDone; err != nil {
+		return err
+	}
 
 	if err := c.c.Wait(); err != nil {
 		cancel()
@@ -126,9 +152,6 @@ func (c *Command) Run(ctx context.Context, cancel context.CancelFunc, conf RunCo
 
 		return err
 	}
-
-	// Flush remainder of scanner
-	<-done
 
 	return nil
 }
