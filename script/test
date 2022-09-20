@@ -1,0 +1,7 @@
+#!/bin/sh
+
+set -ex
+
+mkdir -p integration/bin
+go build -o integration/bin ./...
+go test ./integration -v
