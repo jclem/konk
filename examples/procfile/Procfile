@@ -1,0 +1,2 @@
+echo-foo: echo $FOO
+echo-bar: echo bar

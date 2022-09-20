@@ -9,6 +9,10 @@ import (
 )
 
 var debug bool
+var continueOnError bool
+var noShell bool
+var workingDirectory string
+var noColor bool
 
 var rootCmd = cobra.Command{
 	Use:   "konk",

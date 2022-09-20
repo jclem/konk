@@ -23,4 +23,5 @@ require (
 	github.com/mattn/go-shellwords v1.0.12
 	github.com/spf13/pflag v1.0.5 // indirect
 	golang.org/x/sync v0.0.0-20220513210516-0976fa681c29
+	gopkg.in/yaml.v3 v3.0.1
 )

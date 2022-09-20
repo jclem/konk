@@ -28,10 +28,12 @@ type ShellCommandConfig struct {
 	Command string
 	Label   string
 	NoColor bool
+	Env     []string
 }
 
 func NewShellCommand(conf ShellCommandConfig) *Command {
 	c := exec.Command("/bin/sh", "-c", conf.Command)
+	setEnv(c, conf.Env)
 	prefix := getPrefix(conf.Label, conf.NoColor)
 
 	return &Command{
@@ -45,10 +47,22 @@ type CommandConfig struct {
 	Args    []string
 	Label   string
 	NoColor bool
+	Env     []string
+}
+
+func setEnv(c *exec.Cmd, env []string) {
+	if env == nil {
+		return
+	}
+
+	for _, e := range env {
+		c.Env = append(c.Env, e)
+	}
 }
 
 func NewCommand(conf CommandConfig) *Command {
 	c := exec.Command(conf.Name, conf.Args...)
+	setEnv(c, conf.Env)
 	prefix := getPrefix(conf.Label, conf.NoColor)
 
 	return &Command{
