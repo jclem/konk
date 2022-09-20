@@ -9,8 +9,9 @@ There are two npm packages I frequently already use for running npm scripts
 serially or concurrently: `npm-run-all` and `concurrently`. I built konk because
 I wanted something that could run serially and concurrently and did not need to
 be installed as an npm package (note, however, that konk *can* be installed from
-npm). In addition, I have always been curious how to build such a command line
-interface, so this is also a learning exercise for me.
+npm). In addition, I wanted to be able to use the same command line interface to
+run processes defined in a Procfile. Finally, I have always been curious how to
+build such a command line interface, so this is also a learning exercise for me.
 
 There are currently feature gaps between `npm-run-all` and `concurrently`, but I
 am working to fill them when I have time.
@@ -31,6 +32,11 @@ $ npm i -g konk # Install from npm
 ```
 
 ## Usage
+
+### Run Commands: `konk run`
+
+Konk can run an arbitrary list of commands passed to it, either serially or
+concurrently.
 
 Run some commands serially, one after the other. They will be run in the order
 they're presented in the command line interface.
@@ -165,3 +171,24 @@ $ konk run c -cgL -n 'check:*'
 [check:lint  ] > eslint .
 [check:lint  ]
 ```
+
+### Run Procfile: `konk proc`
+
+Konk can also run a set of commands defined in a Procfile, using `konk proc`.
+
+Given a Procfile like this:
+
+```procfile
+foo: echo foo
+bar: echo bar
+```
+
+```shell
+$ konk proc
+[foo] foo
+[bar] bar
+```
+
+Konk will run the "foo" and "bar" commands concurrently (as if they were run
+with `konk run c`). In addition, Konk will pass any environment variables
+defined in a `.env` file to the running commands.
