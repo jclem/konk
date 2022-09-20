@@ -1,15 +1,12 @@
 package cmd
 
 import (
-	"context"
 	"os"
 	"strings"
 
 	"github.com/jclem/konk/konk"
 	"github.com/jclem/konk/konk/debugger"
-	"github.com/mattn/go-shellwords"
 	"github.com/spf13/cobra"
-	"golang.org/x/sync/errgroup"
 	"gopkg.in/yaml.v3"
 )
 
@@ -50,60 +47,28 @@ var procCommand = cobra.Command{
 			envLines = strings.Split(string(envFile), "\n")
 		}
 
-		ctx, cancel := context.WithCancel(cmd.Context())
-		defer cancel()
+		commandStrings := make([]string, 0, len(procfileMap))
+		commandLabels := make([]string, 0, len(procfileMap))
 
-		eg, ctx := errgroup.WithContext(ctx)
-
-		commands := make([]*konk.Command, 0, len(procfileMap))
-
-		for label, commandString := range procfileMap {
-			var c *konk.Command
-
-			if noShell {
-				parts, err := shellwords.Parse(commandString)
-
-				if err != nil {
-					return err
-				}
-
-				c = konk.NewCommand(konk.CommandConfig{
-					Name:    parts[0],
-					Args:    parts[1:],
-					Label:   label,
-					NoColor: noColor,
-					Env:     envLines,
-				})
-			} else {
-				c = konk.NewShellCommand(konk.ShellCommandConfig{
-					Command: commandString,
-					Label:   label,
-					NoColor: noColor,
-					Env:     envLines,
-				})
-			}
-
-			commands = append(commands, c)
+		for label, command := range procfileMap {
+			commandStrings = append(commandStrings, command)
+			commandLabels = append(commandLabels, label)
 		}
 
-		dbg.Prettyln(commands)
+		commands, err := konk.RunConcurrently(cmd.Context(), konk.RunConcurrentlyConfig{
+			Commands:        commandStrings,
+			Labels:          commandLabels,
+			ContinueOnError: continueOnError,
+			Env:             envLines,
+			NoColor:         noColor,
+			NoShell:         noShell,
+		})
 
-		for _, cmd := range commands {
-			cmd := cmd
-
-			eg.Go(func() error {
-				return cmd.Run(ctx, cancel, konk.RunCommandConfig{
-					AggregateOutput: aggregateOutput,
-					KillOnCancel:    !continueOnError,
-				})
-			})
+		if commands != nil {
+			dbg.Prettyln(commands)
 		}
 
-		if waitErr := eg.Wait(); waitErr != nil {
-			return waitErr
-		}
-
-		return nil
+		return err
 	},
 }
 
