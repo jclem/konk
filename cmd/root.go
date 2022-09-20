@@ -14,9 +14,12 @@ var noShell bool
 var workingDirectory string
 var noColor bool
 
+var Version string
+
 var rootCmd = cobra.Command{
-	Use:   "konk",
-	Short: "Konk is a tool for running multiple processes",
+	Use:     "konk",
+	Short:   "Konk is a tool for running multiple processes",
+	Version: Version,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		// Ensures that usage isn't printed for errors such as non-zero exits.
 		// SEE: https://github.com/spf13/cobra/issues/340#issuecomment-378726225
