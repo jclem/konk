@@ -8,9 +8,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRunSerially(t *testing.T) {
+func TestRunConcurrently(t *testing.T) {
 	out := new(strings.Builder)
-	cmd := exec.Command("bin/konk", "run", "serially", "echo a", "echo b", "echo c")
+	cmd := exec.Command("bin/konk", "run", "concurrently", "-g",
+		"echo a", "echo b", "echo c")
 	cmd.Stdout = out
 	cmd.Stderr = out
 	if err := cmd.Run(); err != nil {
@@ -22,10 +23,10 @@ func TestRunSerially(t *testing.T) {
 `, out.String(), "output did not match expected output")
 }
 
-func TestRunSeriallyWithLabels(t *testing.T) {
+func TestRunConcurrentlyWithLabels(t *testing.T) {
 	out := new(strings.Builder)
 	cmd := exec.Command(
-		"bin/konk", "run", "serially",
+		"bin/konk", "run", "concurrently", "-g",
 		"-l", "a", "-l", "b", "-l", "c",
 		"echo a", "echo b", "echo c")
 	cmd.Stdout = out
@@ -39,10 +40,10 @@ func TestRunSeriallyWithLabels(t *testing.T) {
 `, out.String(), "output did not match expected output")
 }
 
-func TestRunSeriallyWithLabelsMismatch(t *testing.T) {
+func TestRunConcurrentlyWithLabelsMismatch(t *testing.T) {
 	out := new(strings.Builder)
 	cmd := exec.Command(
-		"bin/konk", "run", "serially",
+		"bin/konk", "run", "concurrently", "-g",
 		"-l", "a", "-l", "b",
 		"echo a", "echo b", "echo c")
 	cmd.Stdout = out
@@ -56,10 +57,10 @@ func TestRunSeriallyWithLabelsMismatch(t *testing.T) {
 	assert.Equal(t, "Error: number of names must match number of commands\n", out.String(), "error output did not match expectation")
 }
 
-func TestRunSeriallyWithCommandLabels(t *testing.T) {
+func TestRunConcurrentlyWithCommandLabels(t *testing.T) {
 	out := new(strings.Builder)
 	cmd := exec.Command(
-		"bin/konk", "run", "serially", "-L",
+		"bin/konk", "run", "concurrently", "-gL",
 		"echo a", "echo b", "echo c")
 	cmd.Stdout = out
 	if err := cmd.Run(); err != nil {
@@ -71,10 +72,10 @@ func TestRunSeriallyWithCommandLabels(t *testing.T) {
 `, out.String(), "output did not match expected output")
 }
 
-func TestRunSeriallyWithNpm(t *testing.T) {
+func TestRunConcurrentlyWithNpm(t *testing.T) {
 	out := new(strings.Builder)
 	cmd := exec.Command(
-		"bin/konk", "run", "serially",
+		"bin/konk", "run", "concurrently", "-g",
 		"-w", "fixtures/npm",
 		"--npm", "echo-a",
 		"--npm", "echo-b")
@@ -95,10 +96,10 @@ func TestRunSeriallyWithNpm(t *testing.T) {
 `, out.String(), "output did not match expected output")
 }
 
-func TestRunSeriallyWithNpmGlob(t *testing.T) {
+func TestRunConcurrentlyWithNpmGlob(t *testing.T) {
 	out := new(strings.Builder)
 	cmd := exec.Command(
-		"bin/konk", "run", "serially",
+		"bin/konk", "run", "concurrently", "-g",
 		"-w", "fixtures/npm",
 		"--npm", "echo-*")
 	cmd.Stdout = out
