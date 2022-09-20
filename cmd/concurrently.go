@@ -1,15 +1,12 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"os"
 
 	"github.com/jclem/konk/konk"
 	"github.com/jclem/konk/konk/debugger"
-	"github.com/mattn/go-shellwords"
 	"github.com/spf13/cobra"
-	"golang.org/x/sync/errgroup"
 )
 
 var aggregateOutput bool
@@ -39,66 +36,26 @@ var cCommand = cobra.Command{
 
 		labels := collectLabels(cmdStrings)
 
-		ctx, cancel := context.WithCancel(cmd.Context())
-		defer cancel()
+		commands, err := konk.RunConcurrently(cmd.Context(), konk.RunConcurrentlyConfig{
+			Commands:        cmdParts,
+			Labels:          labels,
+			AggregateOutput: aggregateOutput,
+			ContinueOnError: continueOnError,
+			NoColor:         noColor,
+			NoShell:         noShell,
+		})
 
-		eg, ctx := errgroup.WithContext(ctx)
-
-		commands := make([]*konk.Command, len(cmdParts))
-
-		for i, cmd := range cmdParts {
-			var c *konk.Command
-
-			if noShell {
-				parts, err := shellwords.Parse(cmd)
-
-				if err != nil {
-					return err
-				}
-
-				c = konk.NewCommand(konk.CommandConfig{
-					Name:    parts[0],
-					Args:    parts[1:],
-					Label:   labels[i],
-					NoColor: noColor,
-				})
-			} else {
-				c = konk.NewShellCommand(konk.ShellCommandConfig{
-					Command: cmd,
-					Label:   labels[i],
-					NoColor: noColor,
-				})
-			}
-
-			commands[i] = c
+		if commands != nil {
+			dbg.Prettyln(commands)
 		}
 
-		dbg.Prettyln(commands)
-
-		for _, cmd := range commands {
-			cmd := cmd
-
-			eg.Go(func() error {
-				return cmd.Run(ctx, cancel, konk.RunCommandConfig{
-					AggregateOutput: aggregateOutput,
-					KillOnCancel:    !continueOnError,
-				})
-			})
-		}
-
-		waitErr := eg.Wait()
-
-		if aggregateOutput {
+		if commands != nil && aggregateOutput {
 			for _, cmd := range commands {
 				fmt.Print(cmd.ReadOut())
 			}
 		}
 
-		if waitErr != nil {
-			return waitErr
-		}
-
-		return nil
+		return err
 	},
 }
 

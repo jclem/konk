@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"os"
 	"os/exec"
 	"strings"
 	"syscall"
@@ -28,10 +29,13 @@ type ShellCommandConfig struct {
 	Command string
 	Label   string
 	NoColor bool
+	Env     []string
+	OmitEnv bool
 }
 
 func NewShellCommand(conf ShellCommandConfig) *Command {
 	c := exec.Command("/bin/sh", "-c", conf.Command)
+	setEnv(c, conf.Env, conf.OmitEnv)
 	prefix := getPrefix(conf.Label, conf.NoColor)
 
 	return &Command{
@@ -45,10 +49,21 @@ type CommandConfig struct {
 	Args    []string
 	Label   string
 	NoColor bool
+	Env     []string
+	OmitEnv bool
+}
+
+func setEnv(c *exec.Cmd, env []string, omitEnv bool) {
+	if !omitEnv {
+		c.Env = os.Environ()
+	}
+
+	c.Env = append(c.Env, env...)
 }
 
 func NewCommand(conf CommandConfig) *Command {
 	c := exec.Command(conf.Name, conf.Args...)
+	setEnv(c, conf.Env, conf.OmitEnv)
 	prefix := getPrefix(conf.Label, conf.NoColor)
 
 	return &Command{

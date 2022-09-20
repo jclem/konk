@@ -1,0 +1,3 @@
+echo-foo: echo "FOO: \"$FOO\""
+echo-bar: echo "BAR: \"$BAR\""
+echo-baz: echo baz

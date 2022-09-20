@@ -13,14 +13,11 @@ import (
 var cmdAsLabel bool
 var npmCmds []string
 var names []string
-var continueOnError bool
-var noShell bool
-var workingDirectory string
-var noColor bool
 
 var runCommand = cobra.Command{
-	Use:   "run <subcommand>",
-	Short: "Run commands serially or concurrently",
+	Use:     "run <subcommand>",
+	Aliases: []string{"r"},
+	Short:   "Run commands serially or concurrently (alias: r)",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		_ = cmd.Help()
 		os.Exit(1)
@@ -31,11 +28,12 @@ var runCommand = cobra.Command{
 func init() {
 	runCommand.PersistentFlags().StringVarP(&workingDirectory, "working-directory", "w", "", "set the working directory for all commands")
 	runCommand.PersistentFlags().BoolVarP(&continueOnError, "continue-on-error", "c", false, "continue running commands after a failure")
-	runCommand.PersistentFlags().BoolVarP(&cmdAsLabel, "command-as-label", "L", false, "use each command as its own label")
 	runCommand.PersistentFlags().BoolVarP(&noShell, "no-subshell", "S", false, "do not run commands in a subshell")
+	runCommand.PersistentFlags().BoolVarP(&noColor, "no-color", "C", false, "do not colorize label output")
+
+	runCommand.PersistentFlags().BoolVarP(&cmdAsLabel, "command-as-label", "L", false, "use each command as its own label")
 	runCommand.PersistentFlags().StringArrayVarP(&npmCmds, "npm", "n", []string{}, "npm command")
 	runCommand.PersistentFlags().StringArrayVarP(&names, "label", "l", []string{}, "label prefix for the command")
-	runCommand.PersistentFlags().BoolVarP(&noColor, "no-color", "C", false, "do not colorize label output")
 	rootCmd.AddCommand(&runCommand)
 }
 
