@@ -18,10 +18,10 @@ am working to fill them when I have time.
 
 ## Installation
 
-Install the plain Go module:
+Install via Homebrew:
 
 ```shell
-$ go install github.com/jclem/konk@latest
+$ brew install jclem/tap/konk
 ```
 
 Or, use or install directly from npm:
