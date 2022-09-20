@@ -1,0 +1,6 @@
+{
+  "scripts": {
+    "echo-a": "echo a",
+    "echo-b": "echo b"
+  }
+}
