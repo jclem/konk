@@ -10,8 +10,8 @@ import (
 func TestRunConcurrently(t *testing.T) {
 	t.Parallel()
 
-	out, err := newRunner("run").
-		withFlags("concurrently", "-g", "echo a", "echo b", "echo c").
+	out, err := newGroupedConcurrentRunner().
+		withFlags("echo a", "echo b", "echo c").
 		run(t)
 	assert.NoError(t, err)
 
@@ -24,8 +24,8 @@ func TestRunConcurrently(t *testing.T) {
 func TestRunConcurrentlyWithLabels(t *testing.T) {
 	t.Parallel()
 
-	out, err := newRunner("run").
-		withFlags("concurrently", "-g",
+	out, err := newGroupedConcurrentRunner().
+		withFlags(
 			"-l", "a", "-l", "b", "-l", "c",
 			"echo a", "echo b", "echo c").
 		run(t)
@@ -40,8 +40,8 @@ func TestRunConcurrentlyWithLabels(t *testing.T) {
 func TestRunConcurrentlyWithLabelsMismatch(t *testing.T) {
 	t.Parallel()
 
-	out, err := newRunner("run").
-		withFlags("concurrently", "-g",
+	out, err := newGroupedConcurrentRunner().
+		withFlags(
 			"-l", "a", "-l", "b",
 			"echo a", "echo b", "echo c").
 		run(t)
@@ -56,9 +56,8 @@ func TestRunConcurrentlyWithLabelsMismatch(t *testing.T) {
 func TestRunConcurrentlyWithCommandLabels(t *testing.T) {
 	t.Parallel()
 
-	out, err := newRunner("run").
-		withFlags("concurrently", "-gL",
-			"echo a", "echo b", "echo c").
+	out, err := newGroupedConcurrentRunner().
+		withFlags("-L", "echo a", "echo b", "echo c").
 		run(t)
 	assert.NoError(t, err)
 
@@ -71,8 +70,8 @@ func TestRunConcurrentlyWithCommandLabels(t *testing.T) {
 func TestRunConcurrentlyWithNpm(t *testing.T) {
 	t.Parallel()
 
-	out, err := newRunner("run").
-		withFlags("concurrently", "-g",
+	out, err := newGroupedConcurrentRunner().
+		withFlags(
 			"-w", "fixtures/npm",
 			"--npm", "echo-a",
 			"--npm", "echo-b").
@@ -95,8 +94,8 @@ func TestRunConcurrentlyWithNpm(t *testing.T) {
 func TestRunConcurrentlyWithNpmGlob(t *testing.T) {
 	t.Parallel()
 
-	out, err := newRunner("run").
-		withFlags("concurrently", "-g",
+	out, err := newGroupedConcurrentRunner().
+		withFlags(
 			"-w", "fixtures/npm",
 			"--npm", "echo-*").
 		run(t)
@@ -113,4 +112,8 @@ func TestRunConcurrentlyWithNpmGlob(t *testing.T) {
 [1] 
 [1] b
 `, sortOut(t, out), "output did not match expected output")
+}
+
+func newGroupedConcurrentRunner() runner {
+	return newRunner("run").withFlags("concurrently", "-g")
 }

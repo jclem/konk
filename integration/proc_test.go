@@ -9,9 +9,7 @@ import (
 func TestProc(t *testing.T) {
 	t.Parallel()
 
-	out, err := newRunner("proc").
-		withFlags("-w", "fixtures/proc").
-		run(t)
+	out, err := newProcRunner().run(t)
 	assert.NoError(t, err)
 
 	assert.Equal(t, `[echo-a] a
@@ -23,10 +21,9 @@ func TestProc(t *testing.T) {
 func TestProcEnvSpaces(t *testing.T) {
 	t.Parallel()
 
-	out, err := newRunner("proc").withFlags(
+	out, err := newProcRunner().withFlags(
 		"-e", ".env-spaces",
-		"-p", "Procfile-spaces",
-		"-w", "fixtures/proc").
+		"-p", "Procfile-spaces").
 		run(t)
 	assert.NoError(t, err)
 
@@ -38,8 +35,8 @@ func TestProcEnvSpaces(t *testing.T) {
 func TestProcWithExternalEnvNoEnv(t *testing.T) {
 	t.Parallel()
 
-	out, err := newRunner("proc").
-		withFlags("-E", "-w", "fixtures/proc").
+	out, err := newProcRunner().
+		withFlags("-E").
 		withEnv("A=new-a", "B=new-b", "C=new-c").
 		run(t)
 	assert.NoError(t, err)
@@ -53,8 +50,7 @@ func TestProcWithExternalEnvNoEnv(t *testing.T) {
 func TestProcWithExternalEnvAndEnv(t *testing.T) {
 	t.Parallel()
 
-	out, err := newRunner("proc").
-		withFlags("-w", "fixtures/proc").
+	out, err := newProcRunner().
 		withEnv("C=c").
 		run(t)
 	assert.NoError(t, err)
@@ -63,4 +59,8 @@ func TestProcWithExternalEnvAndEnv(t *testing.T) {
 [echo-b] b
 [echo-c] c
 `, sortOut(t, out), "output did not match expected output")
+}
+
+func newProcRunner() runner {
+	return newRunner("proc").withFlags("-w", "fixtures/proc")
 }

@@ -14,21 +14,21 @@ type runner struct {
 	env   []string
 }
 
-func newRunner(cmd string) *runner {
-	return &runner{cmd: cmd}
+func newRunner(cmd string) runner {
+	return runner{cmd: cmd}
 }
 
-func (r *runner) withFlags(flags ...string) *runner {
+func (r runner) withFlags(flags ...string) runner {
 	r.flags = append(r.flags, flags...)
 	return r
 }
 
-func (r *runner) withEnv(env ...string) *runner {
+func (r runner) withEnv(env ...string) runner {
 	r.env = append(r.env, env...)
 	return r
 }
 
-func (r *runner) run(t *testing.T) (string, error) {
+func (r runner) run(t *testing.T) (string, error) {
 	t.Helper()
 
 	out := new(strings.Builder)

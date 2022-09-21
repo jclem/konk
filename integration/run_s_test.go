@@ -10,8 +10,8 @@ import (
 func TestRunSerially(t *testing.T) {
 	t.Parallel()
 
-	out, err := newRunner("run").
-		withFlags("serially", "echo a", "echo b", "echo c").
+	out, err := newSerialRunner().
+		withFlags("echo a", "echo b", "echo c").
 		run(t)
 	assert.NoError(t, err)
 
@@ -24,9 +24,8 @@ func TestRunSerially(t *testing.T) {
 func TestRunSeriallyWithLabels(t *testing.T) {
 	t.Parallel()
 
-	out, err := newRunner("run").
-		withFlags("serially",
-			"-l", "a", "-l", "b", "-l", "c",
+	out, err := newSerialRunner().
+		withFlags("-l", "a", "-l", "b", "-l", "c",
 			"echo a", "echo b", "echo c").
 		run(t)
 	assert.NoError(t, err)
@@ -40,9 +39,8 @@ func TestRunSeriallyWithLabels(t *testing.T) {
 func TestRunSeriallyWithLabelsMismatch(t *testing.T) {
 	t.Parallel()
 
-	out, err := newRunner("run").
-		withFlags("serially",
-			"-l", "a", "-l", "b",
+	out, err := newSerialRunner().
+		withFlags("-l", "a", "-l", "b",
 			"echo a", "echo b", "echo c").
 		run(t)
 
@@ -56,8 +54,8 @@ func TestRunSeriallyWithLabelsMismatch(t *testing.T) {
 func TestRunSeriallyWithCommandLabels(t *testing.T) {
 	t.Parallel()
 
-	out, err := newRunner("run").
-		withFlags("serially", "-L",
+	out, err := newSerialRunner().
+		withFlags("-L",
 			"echo a", "echo b", "echo c").
 		run(t)
 	assert.NoError(t, err)
@@ -71,9 +69,8 @@ func TestRunSeriallyWithCommandLabels(t *testing.T) {
 func TestRunSeriallyWithNpm(t *testing.T) {
 	t.Parallel()
 
-	out, err := newRunner("run").
+	out, err := newSerialRunner().
 		withFlags(
-			"serially",
 			"-w", "fixtures/npm",
 			"--npm", "echo-a",
 			"--npm", "echo-b",
@@ -97,9 +94,8 @@ func TestRunSeriallyWithNpm(t *testing.T) {
 func TestRunSeriallyWithNpmGlob(t *testing.T) {
 	t.Parallel()
 
-	out, err := newRunner("run").
+	out, err := newSerialRunner().
 		withFlags(
-			"serially",
 			"-w", "fixtures/npm",
 			"--npm", "echo-*",
 		).
@@ -117,4 +113,8 @@ func TestRunSeriallyWithNpmGlob(t *testing.T) {
 [1] 
 [1] b
 `, out, "output did not match expected output")
+}
+
+func newSerialRunner() runner {
+	return newRunner("run").withFlags("serially")
 }
