@@ -79,19 +79,25 @@ func RunConcurrently(ctx context.Context, cfg RunConcurrentlyConfig) ([]*Command
 }
 
 func parseEnv(env []string) ([]string, error) {
+	var parsedEnv []string
+
 	// Unquote any quoted .env vars.
-	for i, line := range env {
+	for _, line := range env {
 		parsed, err := shellwords.Parse(line)
 		if err != nil {
 			return nil, err
+		}
+
+		if len(parsed) == 0 {
+			continue
 		}
 
 		if len(parsed) != 1 {
 			return nil, fmt.Errorf("invalid .env line: %s", line)
 		}
 
-		env[i] = parsed[0]
+		parsedEnv = append(parsedEnv, parsed[0])
 	}
 
-	return env, nil
+	return parsedEnv, nil
 }
