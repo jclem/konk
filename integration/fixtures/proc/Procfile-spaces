@@ -1,0 +1,2 @@
+echo-abc: echo $ABC
+echo-def: echo $DEF
