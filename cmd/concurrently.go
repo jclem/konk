@@ -49,12 +49,6 @@ var cCommand = cobra.Command{
 			dbg.Prettyln(commands)
 		}
 
-		if commands != nil && aggregateOutput {
-			for _, cmd := range commands {
-				fmt.Print(cmd.ReadOut())
-			}
-		}
-
 		return err
 	},
 }

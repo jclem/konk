@@ -141,6 +141,10 @@ func (c *Command) Run(ctx context.Context, cancel context.CancelFunc, conf RunCo
 		return err
 	}
 
+	if conf.AggregateOutput {
+		fmt.Print(c.ReadOut())
+	}
+
 	if err := c.c.Wait(); err != nil {
 		cancel()
 
