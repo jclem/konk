@@ -2,6 +2,7 @@ package konk
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/mattn/go-shellwords"
 	"golang.org/x/sync/errgroup"
@@ -26,6 +27,11 @@ func RunConcurrently(ctx context.Context, cfg RunConcurrentlyConfig) ([]*Command
 
 	commands := make([]*Command, len(cfg.Commands))
 
+	env, err := parseEnv(cfg.Env)
+	if err != nil {
+		return nil, err
+	}
+
 	for i, cmd := range cfg.Commands {
 		var c *Command
 
@@ -40,7 +46,7 @@ func RunConcurrently(ctx context.Context, cfg RunConcurrentlyConfig) ([]*Command
 				Name:    parts[0],
 				Args:    parts[1:],
 				Label:   cfg.Labels[i],
-				Env:     cfg.Env,
+				Env:     env,
 				OmitEnv: cfg.OmitEnv,
 				NoColor: cfg.NoColor,
 			})
@@ -48,7 +54,7 @@ func RunConcurrently(ctx context.Context, cfg RunConcurrentlyConfig) ([]*Command
 			c = NewShellCommand(ShellCommandConfig{
 				Command: cmd,
 				Label:   cfg.Labels[i],
-				Env:     cfg.Env,
+				Env:     env,
 				OmitEnv: cfg.OmitEnv,
 				NoColor: cfg.NoColor,
 			})
@@ -68,6 +74,24 @@ func RunConcurrently(ctx context.Context, cfg RunConcurrentlyConfig) ([]*Command
 		})
 	}
 
-	err := eg.Wait()
+	err = eg.Wait()
 	return commands, err
+}
+
+func parseEnv(env []string) ([]string, error) {
+	// Unquote any quoted .env vars.
+	for i, line := range env {
+		parsed, err := shellwords.Parse(line)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(parsed) != 1 {
+			return nil, fmt.Errorf("invalid .env line: %s", line)
+		}
+
+		env[i] = parsed[0]
+	}
+
+	return env, nil
 }

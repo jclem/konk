@@ -32,6 +32,30 @@ func TestProc(t *testing.T) {
 [echo-c] `, sortedOut, "output did not match expected output")
 }
 
+func TestProcEnvSpaces(t *testing.T) {
+	t.Parallel()
+
+	out := new(strings.Builder)
+	cmd := exec.Command(
+		"bin/konk", "proc",
+		"-e", ".env-spaces",
+		"-p", "Procfile-spaces",
+		"-w", "fixtures/proc")
+	cmd.Stdout = out
+	cmd.Stderr = out
+	if err := cmd.Run(); err != nil {
+		t.Error(err)
+	}
+
+	lines := strings.Split(out.String(), "\n")
+	sort.Strings(lines)
+	sortedOut := strings.Join(lines, "\n")
+
+	assert.Equal(t, `
+[echo-abc] a b c
+[echo-def] d "e" f`, sortedOut, "output did not match expected output")
+}
+
 func TestProcWithExternalEnvNoEnv(t *testing.T) {
 	t.Parallel()
 
