@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"strings"
 
@@ -64,6 +65,18 @@ var procCommand = cobra.Command{
 		for label, command := range procfileMap {
 			commandStrings = append(commandStrings, command)
 			commandLabels = append(commandLabels, label)
+		}
+
+		var maxLabelLen int
+
+		for _, label := range commandLabels {
+			if len(label) > maxLabelLen {
+				maxLabelLen = len(label)
+			}
+		}
+
+		for i, label := range commandLabels {
+			commandLabels[i] = fmt.Sprintf("%s%s", label, strings.Repeat(" ", maxLabelLen-len(label)))
 		}
 
 		commands, err := konk.RunConcurrently(cmd.Context(), konk.RunConcurrentlyConfig{
