@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -18,7 +20,7 @@ var runCommand = cobra.Command{
 	Use:     "run <subcommand>",
 	Aliases: []string{"r"},
 	Short:   "Run commands serially or concurrently (alias: r)",
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		_ = cmd.Help()
 		os.Exit(1)
 		return nil
@@ -51,16 +53,22 @@ func collectCommands(args []string) ([]string, []string, error) {
 			prefix := strings.TrimSuffix(cmd, "*")
 			pkgFile, err := os.ReadFile("package.json")
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, fmt.Errorf("reading package.json: %w", err)
 			}
-			var pkg map[string]interface{}
+			var pkg map[string]any
 			if err := json.Unmarshal(pkgFile, &pkg); err != nil {
-				return nil, nil, err
+				return nil, nil, fmt.Errorf("unmarshalling package.json: %w", err)
 			}
 
 			// See if any "scripts" match our prefix
 			matchingScripts := []string{}
-			for script := range pkg["scripts"].(map[string]interface{}) {
+
+			scripts, ok := pkg["scripts"].(map[string]any)
+			if !ok {
+				return nil, nil, errors.New("invalid scripts in package.json")
+			}
+
+			for script := range scripts {
 				if strings.HasPrefix(script, prefix) {
 					matchingScripts = append(matchingScripts, script)
 				}
@@ -70,13 +78,13 @@ func collectCommands(args []string) ([]string, []string, error) {
 
 			for _, script := range matchingScripts {
 				commandStrings = append(commandStrings, script)
-				commands = append(commands, fmt.Sprintf("npm run %s", script))
+				commands = append(commands, "npm run "+script)
 			}
 
 			continue
 		}
 
-		script := fmt.Sprintf("npm run %s", cmd)
+		script := "npm run " + cmd
 		commandStrings = append(commandStrings, cmd)
 		commands = append(commands, script)
 	}
@@ -88,12 +96,13 @@ func collectLabels(commandStrings []string) []string {
 	labels := make([]string, len(commandStrings))
 
 	for i, cmdStr := range commandStrings {
-		if cmdAsLabel {
+		switch {
+		case cmdAsLabel:
 			labels[i] = cmdStr
-		} else if len(names) > 0 {
+		case len(names) > 0:
 			labels[i] = names[i]
-		} else {
-			labels[i] = fmt.Sprintf("%d", i)
+		default:
+			labels[i] = strconv.Itoa(i)
 		}
 	}
 

@@ -1,16 +1,17 @@
-package test
+package integration_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestProc(t *testing.T) {
 	t.Parallel()
 
 	out, err := newProcRunner().run(t)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, `[echo-a] a
 [echo-b] b
@@ -25,7 +26,7 @@ func TestProcEnvSpaces(t *testing.T) {
 		"-e", ".env-spaces",
 		"-p", "Procfile-spaces").
 		run(t)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, `[echo-abc] a b c
 [echo-def] d "e" f
@@ -39,7 +40,7 @@ func TestProcWithExternalEnvNoEnv(t *testing.T) {
 		withFlags("-E").
 		withEnv("A=new-a", "B=new-b", "C=new-c").
 		run(t)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, `[echo-a] new-a
 [echo-b] new-b
@@ -53,7 +54,7 @@ func TestProcWithExternalEnvAndEnv(t *testing.T) {
 	out, err := newProcRunner().
 		withEnv("C=c").
 		run(t)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, `[echo-a] a
 [echo-b] b

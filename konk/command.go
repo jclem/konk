@@ -3,13 +3,14 @@ package konk
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"math/rand"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"syscall"
-	"time"
 
 	"github.com/charmbracelet/lipgloss"
 )
@@ -34,7 +35,7 @@ type ShellCommandConfig struct {
 }
 
 func NewShellCommand(conf ShellCommandConfig) *Command {
-	c := exec.Command("/bin/sh", "-c", conf.Command)
+	c := exec.Command("/bin/sh", "-c", conf.Command) //nolint:gosec // Intentional user-defined sub-process.
 	setEnv(c, conf.Env, conf.OmitEnv)
 	prefix := getPrefix(conf.Label, conf.NoColor)
 
@@ -62,7 +63,7 @@ func setEnv(c *exec.Cmd, env []string, omitEnv bool) {
 }
 
 func NewCommand(conf CommandConfig) *Command {
-	c := exec.Command(conf.Name, conf.Args...)
+	c := exec.Command(conf.Name, conf.Args...) //nolint:gosec // Intentional user-defined sub-process.
 	setEnv(c, conf.Env, conf.OmitEnv)
 	prefix := getPrefix(conf.Label, conf.NoColor)
 
@@ -75,7 +76,7 @@ func NewCommand(conf CommandConfig) *Command {
 func (c *Command) Run(ctx context.Context, cancel context.CancelFunc, conf RunCommandConfig) error {
 	stdout, err := c.c.StdoutPipe()
 	if err != nil {
-		return err
+		return fmt.Errorf("getting stdout pipe: %w", err)
 	}
 	c.c.Stderr = c.c.Stdout
 
@@ -86,7 +87,7 @@ func (c *Command) Run(ctx context.Context, cancel context.CancelFunc, conf RunCo
 	allDone := make(chan error)
 
 	if err := c.c.Start(); err != nil {
-		return err
+		return fmt.Errorf("starting command: %w", err)
 	}
 
 	// Start a goroutine to read the command's output. Send that output to the
@@ -115,7 +116,7 @@ func (c *Command) Run(ctx context.Context, cancel context.CancelFunc, conf RunCo
 				if conf.AggregateOutput {
 					c.out.WriteString(line)
 				} else {
-					fmt.Print(line)
+					fmt.Fprint(os.Stdout, line)
 				}
 			case <-ctx.Done():
 				if conf.KillOnCancel {
@@ -142,19 +143,20 @@ func (c *Command) Run(ctx context.Context, cancel context.CancelFunc, conf RunCo
 	}
 
 	if conf.AggregateOutput {
-		fmt.Print(c.ReadOut())
+		fmt.Fprint(os.Stdout, c.ReadOut())
 	}
 
 	if err := c.c.Wait(); err != nil {
 		cancel()
 
-		if execExitErr, ok := err.(*exec.ExitError); ok {
-			exitErr := newExitError(c.prefix, execExitErr)
-			fmt.Println(exitErr)
+		var xerr *exec.ExitError
+		if errors.As(err, &xerr) {
+			exitErr := newExitError(c.prefix, xerr)
+			fmt.Fprintln(os.Stdout, exitErr)
 			return exitErr
 		}
 
-		return err
+		return fmt.Errorf("waiting for command: %w", err)
 	}
 
 	return nil
@@ -180,20 +182,14 @@ func newExitError(label string, err error) error {
 	}
 }
 
-func init() {
-	// Seed random for random prefix colors.
-	rand.Seed(time.Now().UnixNano())
-}
-
 func getPrefix(label string, noColor bool) string {
-
 	var prefix string
 
 	if noColor {
 		prefix = fmt.Sprintf("[%s]", label)
 	} else {
-		prefixColor := rand.Intn(16) + 1
-		prefixStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(fmt.Sprint(prefixColor)))
+		prefixColor := rand.Intn(16) + 1 //nolint:gosec // No need for cryptographic randomness for process labels.
+		prefixStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(strconv.Itoa(prefixColor)))
 		prefix = prefixStyle.Render(fmt.Sprintf("[%s]", label))
 	}
 

@@ -39,7 +39,7 @@ func RunConcurrently(ctx context.Context, cfg RunConcurrentlyConfig) ([]*Command
 			parts, err := shellwords.Parse(cmd)
 
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("parsing command: %w", err)
 			}
 
 			c = NewCommand(CommandConfig{
@@ -75,17 +75,21 @@ func RunConcurrently(ctx context.Context, cfg RunConcurrentlyConfig) ([]*Command
 	}
 
 	err = eg.Wait()
+	if err != nil {
+		err = fmt.Errorf("running commands: %w", err)
+	}
+
 	return commands, err
 }
 
 func parseEnv(env []string) ([]string, error) {
-	var parsedEnv []string
+	parsedEnv := make([]string, 0, len(env))
 
 	// Unquote any quoted .env vars.
 	for _, line := range env {
 		parsed, err := shellwords.Parse(line)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("parsing .env line: %w", err)
 		}
 
 		if len(parsed) == 0 {

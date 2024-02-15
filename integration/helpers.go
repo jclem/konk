@@ -1,7 +1,6 @@
-package test
+package integration_test
 
 import (
-	"fmt"
 	"os/exec"
 	"sort"
 	"strings"
@@ -71,5 +70,5 @@ func sortOut(t *testing.T, out string) string {
 	}
 
 	// Our output always ends in a newline.
-	return fmt.Sprintf("%s\n", strings.Join(sortedLines, "\n"))
+	return strings.Join(sortedLines, "\n") + "\n"
 }

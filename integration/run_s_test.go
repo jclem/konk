@@ -1,10 +1,11 @@
-package test
+package integration_test
 
 import (
 	"os/exec"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRunSerially(t *testing.T) {
@@ -13,7 +14,7 @@ func TestRunSerially(t *testing.T) {
 	out, err := newSerialRunner().
 		withFlags("echo a", "echo b", "echo c").
 		run(t)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, `[0] a
 [1] b
@@ -28,7 +29,7 @@ func TestRunSeriallyWithLabels(t *testing.T) {
 		withFlags("-l", "a", "-l", "b", "-l", "c",
 			"echo a", "echo b", "echo c").
 		run(t)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, `[a] a
 [b] b
@@ -58,7 +59,7 @@ func TestRunSeriallyWithCommandLabels(t *testing.T) {
 		withFlags("-L",
 			"echo a", "echo b", "echo c").
 		run(t)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, `[echo a] a
 [echo b] b
@@ -76,7 +77,7 @@ func TestRunSeriallyWithNpm(t *testing.T) {
 			"--npm", "echo-b",
 		).
 		run(t)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, `[0] 
 [0] > echo-a
@@ -100,7 +101,7 @@ func TestRunSeriallyWithNpmGlob(t *testing.T) {
 			"--npm", "echo-*",
 		).
 		run(t)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, `[0] 
 [0] > echo-a

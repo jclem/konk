@@ -1,10 +1,11 @@
-package test
+package integration_test
 
 import (
 	"os/exec"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRunConcurrently(t *testing.T) {
@@ -13,7 +14,7 @@ func TestRunConcurrently(t *testing.T) {
 	out, err := newGroupedConcurrentRunner().
 		withFlags("echo a", "echo b", "echo c").
 		run(t)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, `[0] a
 [1] b
@@ -29,7 +30,7 @@ func TestRunConcurrentlyWithLabels(t *testing.T) {
 			"-l", "a", "-l", "b", "-l", "c",
 			"echo a", "echo b", "echo c").
 		run(t)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, `[a] a
 [b] b
@@ -59,7 +60,7 @@ func TestRunConcurrentlyWithCommandLabels(t *testing.T) {
 	out, err := newGroupedConcurrentRunner().
 		withFlags("-L", "echo a", "echo b", "echo c").
 		run(t)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, `[echo a] a
 [echo b] b
@@ -76,7 +77,7 @@ func TestRunConcurrentlyWithNpm(t *testing.T) {
 			"--npm", "echo-a",
 			"--npm", "echo-b").
 		run(t)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, `[0] 
 [0] > echo-a
@@ -99,7 +100,7 @@ func TestRunConcurrentlyWithNpmGlob(t *testing.T) {
 			"-w", "fixtures/npm",
 			"--npm", "echo-*").
 		run(t)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, `[0] 
 [0] > echo-a
