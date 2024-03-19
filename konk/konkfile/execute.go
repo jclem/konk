@@ -3,6 +3,7 @@ package konkfile
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/jclem/konk/konk"
 	"github.com/jclem/konk/konk/debugger"
@@ -22,6 +23,8 @@ func Execute(ctx context.Context, file File, command string, cfg ExecuteConfig) 
 type executor struct {
 	file File
 	cfg  ExecuteConfig
+	wg   *sync.WaitGroup
+	mut  *sync.Mutex
 }
 
 func (e *executor) execute(ctx context.Context, cmdName string) error {
@@ -32,14 +35,39 @@ func (e *executor) execute(ctx context.Context, cmdName string) error {
 		return fmt.Errorf("command not found: %s", cmdName)
 	}
 
+	wg := new(sync.WaitGroup)
 	for _, dep := range cmd.Dependencies {
-		if err := e.execute(ctx, dep); err != nil {
-			return fmt.Errorf("running dependency %s: %w", dep, err)
-		}
+		wg.Add(1)
+
+		go func(dep string) {
+			defer wg.Done()
+			if err := e.execute(ctx, dep); err != nil {
+				panic(fmt.Errorf("running dependency %s: %w", dep, err))
+			}
+		}(dep)
 	}
+
+	wg.Wait()
 
 	if cmd.Run == "" {
 		return nil
+	}
+
+	// Concurrency control:
+	// - The mutex ensures that no other commands run while an exclusive command
+	// 	 is running.
+	// - The wait group ensures an exclusive command waits for all other commands
+	//   to complete.
+
+	e.mut.Lock()
+
+	if cmd.Exclusive {
+		defer e.mut.Unlock()
+		e.wg.Wait()
+	} else {
+		e.wg.Add(1)
+		defer e.wg.Done()
+		e.mut.Unlock()
 	}
 
 	var c *konk.Command
@@ -77,5 +105,10 @@ func (e *executor) execute(ctx context.Context, cmdName string) error {
 }
 
 func newExecutor(file File, cfg ExecuteConfig) *executor {
-	return &executor{file, cfg}
+	return &executor{
+		file: file,
+		cfg:  cfg,
+		mut:  new(sync.Mutex),
+		wg:   new(sync.WaitGroup),
+	}
 }
