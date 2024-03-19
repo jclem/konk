@@ -1,3 +1,4 @@
 tmp/
 dist/
 integration/bin/
+konkfile.json
