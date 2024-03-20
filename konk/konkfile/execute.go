@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/jclem/konk/konk"
+	"github.com/jclem/konk/konk/konkfile/internal/dag"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -15,15 +16,15 @@ type ExecuteConfig struct {
 }
 
 func Execute(ctx context.Context, file File, command string, cfg ExecuteConfig) error {
-	dag := newDAG[string]()
+	g := dag.New[string]()
 
 	for name := range file.Commands {
-		dag.addNode(name)
+		g.AddNode(name)
 	}
 
 	for name, cmd := range file.Commands {
 		for _, dep := range cmd.Dependencies {
-			if err := dag.addEdge(edge[string]{name, dep}); err != nil {
+			if err := g.AddEdge(name, dep); err != nil {
 				return fmt.Errorf("adding edge: %w", err)
 			}
 		}
@@ -31,13 +32,12 @@ func Execute(ctx context.Context, file File, command string, cfg ExecuteConfig) 
 
 	s := &scheduler{wgs: make(map[string]*sync.WaitGroup, 0)}
 
-	for _, node := range dag.nodes {
-		s.wgs[node] = new(sync.WaitGroup)
-		s.wgs[node].Add(1)
+	for _, n := range g.Nodes() {
+		s.wgs[n] = new(sync.WaitGroup)
+		s.wgs[n].Add(1)
 	}
 
 	mut := new(sync.Mutex)
-
 	wg := new(sync.WaitGroup)
 
 	onNode := func(n string) error {
@@ -73,11 +73,17 @@ func Execute(ctx context.Context, file File, command string, cfg ExecuteConfig) 
 		return nil
 	}
 
+	path, err := g.Visit(command)
+	if err != nil {
+		return fmt.Errorf("visiting node: %w", err)
+	}
+
 	var eg errgroup.Group
-	for _, n := range dag.nodes {
+	for _, n := range path {
 		n := n
 		eg.Go(func() error {
-			return s.run(n, dag.from(n), onNode)
+			from := g.From(n)
+			return s.run(n, from, onNode)
 		})
 	}
 
