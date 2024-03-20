@@ -5,7 +5,7 @@ type File struct {
 }
 
 type Command struct {
-	Run          string   `json:"run"`
-	Dependencies []string `json:"dependencies"`
-	Exclusive    bool     `json:"exclusive"`
+	Run       string   `json:"run"`
+	Needs     []string `json:"needs"`
+	Exclusive bool     `json:"exclusive"`
 }

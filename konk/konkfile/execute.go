@@ -26,7 +26,7 @@ func Execute(ctx context.Context, file File, command string, cfg ExecuteConfig) 
 	}
 
 	for name, cmd := range file.Commands {
-		for _, dep := range cmd.Dependencies {
+		for _, dep := range cmd.Needs {
 			if err := g.AddEdge(name, dep); err != nil {
 				return fmt.Errorf("adding edge: %w", err)
 			}
