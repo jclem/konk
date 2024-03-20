@@ -3,14 +3,13 @@ package debugger
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/kr/pretty"
 	"github.com/spf13/cobra"
 )
 
-type contextKeyType string
-
-var contextKey contextKeyType = "debug"
+var contextKey = struct{}{} //nolint:gochecknoglobals // we want to use a global key
 
 type Debugger struct {
 	debug *bool
@@ -23,7 +22,7 @@ func WithDebugger(ctx context.Context, debug *bool) context.Context {
 
 func (d *Debugger) Debugf(format string, args ...interface{}) {
 	if *d.debug {
-		fmt.Printf(fmt.Sprintf("DEBUG: %s\n", format), args...)
+		fmt.Fprintf(os.Stdout, fmt.Sprintf("DEBUG: %s\n", format), args...)
 	}
 }
 
@@ -40,6 +39,10 @@ func (d *Debugger) Prettyln(arg ...interface{}) {
 }
 
 func Get(ctx context.Context) *Debugger {
-	dbg := ctx.Value(contextKey).(*Debugger)
+	dbg, ok := ctx.Value(contextKey).(*Debugger)
+	if !ok {
+		panic("no debugger in context")
+	}
+
 	return dbg
 }

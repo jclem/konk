@@ -20,19 +20,19 @@ var procCommand = cobra.Command{
 	Use:     "proc",
 	Aliases: []string{"p"},
 	Short:   "Run commands defined in a Procfile (alias: p)",
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		dbg := debugger.Get(cmd.Context())
 		dbg.Flags(cmd)
 
 		if workingDirectory != "" {
 			if err := os.Chdir(workingDirectory); err != nil {
-				return err
+				return fmt.Errorf("changing working directory: %w", err)
 			}
 		}
 
 		procfile, err := os.Open(procfile)
 		if err != nil {
-			return err
+			return fmt.Errorf("opening procfile: %w", err)
 		}
 		defer procfile.Close()
 
@@ -54,7 +54,7 @@ var procCommand = cobra.Command{
 		if !noEnvFile {
 			envFile, err := os.ReadFile(envFile)
 			if err != nil {
-				return err
+				return fmt.Errorf("reading env file: %w", err)
 			}
 			envLines = strings.Split(string(envFile), "\n")
 		}
@@ -93,7 +93,11 @@ var procCommand = cobra.Command{
 			dbg.Prettyln(commands)
 		}
 
-		return err
+		if err != nil {
+			return fmt.Errorf("running commands: %w", err)
+		}
+
+		return nil
 	},
 }
 

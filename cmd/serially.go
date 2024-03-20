@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 
@@ -21,7 +22,7 @@ var sCommand = cobra.Command{
 
 		if workingDirectory != "" {
 			if err := os.Chdir(workingDirectory); err != nil {
-				return err
+				return fmt.Errorf("changing working directory: %w", err)
 			}
 		}
 
@@ -31,12 +32,12 @@ var sCommand = cobra.Command{
 		}
 
 		if len(names) > 0 && len(names) != len(cmdParts) {
-			return fmt.Errorf("number of names must match number of commands")
+			return errors.New("number of names must match number of commands")
 		}
 
 		labels := collectLabels(commandStrings)
 
-		var cmdErr error
+		var errCmd error
 
 		commands := make([]*konk.Command, len(cmdParts))
 
@@ -47,7 +48,7 @@ var sCommand = cobra.Command{
 				parts, err := shellwords.Parse(cmd)
 
 				if err != nil {
-					return err
+					return fmt.Errorf("parsing command: %w", err)
 				}
 
 				c = konk.NewCommand(konk.CommandConfig{
@@ -73,18 +74,14 @@ var sCommand = cobra.Command{
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			err := c.Run(ctx, cancel, konk.RunCommandConfig{})
-
-			if err != nil && !continueOnError {
-				return err
-			}
-
-			if err != nil {
-				cmdErr = err
+			if err := c.Run(ctx, cancel, konk.RunCommandConfig{}); err != nil && continueOnError {
+				errCmd = err
+			} else if err != nil {
+				return fmt.Errorf("running command: %w", err)
 			}
 		}
 
-		return cmdErr
+		return errCmd
 	},
 }
 

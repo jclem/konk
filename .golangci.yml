@@ -1,0 +1,39 @@
+issues:
+  exclude-rules:
+    - path: cmd/
+      linters:
+        - gochecknoglobals
+        - gochecknoinits
+
+linters:
+  presets:
+    - bugs
+    - comment
+    # - complexity # limits cyclomatic complexity—typically results in hard-to-follow code
+    - error
+    - format
+    - import
+    - metalinter
+    - module
+    - performance
+    - sql
+    - style
+    - test
+    - unused
+
+  disable:
+    - depguard # enforces dependency allow list; not using allow list
+    - paralleltest # not enough tests to matter; not helpful
+
+    # annoying/bad
+    - exhaustruct # enforces exhaustive structs; often incorrect; bad
+    - goerr113 # disallows returning one-off errors; annoying
+    - gofumpt # different code formatter; bad
+    - gomnd # disallows magic numbers; annoying
+    - ireturn # bans returning interfaces; often incorrect; bad
+    - lll # limits line length; annoying
+    - nlreturn # requires blank line before return; annoying
+    - nonamedreturns # disallows named returns; often required for defer error checking; bad
+    - tagliatelle # enforces tag name style; often incorrect; bad
+    - varnamelen # limits variable name length; annoying
+    - wsl # tedious whitespace rules; annoying

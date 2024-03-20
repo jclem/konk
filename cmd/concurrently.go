@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -21,7 +22,7 @@ var cCommand = cobra.Command{
 
 		if workingDirectory != "" {
 			if err := os.Chdir(workingDirectory); err != nil {
-				return err
+				return fmt.Errorf("changing working directory: %w", err)
 			}
 		}
 
@@ -31,7 +32,7 @@ var cCommand = cobra.Command{
 		}
 
 		if len(names) > 0 && len(names) != len(cmdParts) {
-			return fmt.Errorf("number of names must match number of commands")
+			return errors.New("number of names must match number of commands")
 		}
 
 		labels := collectLabels(cmdStrings)
@@ -49,7 +50,11 @@ var cCommand = cobra.Command{
 			dbg.Prettyln(commands)
 		}
 
-		return err
+		if err != nil {
+			return fmt.Errorf("running commands: %w", err)
+		}
+
+		return nil
 	},
 }
 
