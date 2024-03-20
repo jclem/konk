@@ -38,8 +38,10 @@ var execCommand = cobra.Command{
 		}
 
 		if err := konkfile.Execute(cmd.Context(), file, args[0], konkfile.ExecuteConfig{
-			NoColor: noColor,
-			NoShell: noShell,
+			AggregateOutput: aggregateOutput,
+			ContinueOnError: continueOnError,
+			NoColor:         noColor,
+			NoShell:         noShell,
 		}); err != nil {
 			return fmt.Errorf("executing command: %w", err)
 		}
@@ -49,6 +51,9 @@ var execCommand = cobra.Command{
 }
 
 func init() {
+	execCommand.Flags().StringVarP(&workingDirectory, "working-directory", "w", "", "set the working directory for all commands")
+	execCommand.Flags().BoolVarP(&aggregateOutput, "aggregate-output", "g", false, "aggregate command output")
+	execCommand.Flags().BoolVarP(&continueOnError, "continue-on-error", "c", false, "continue running commands after a failure")
 	execCommand.Flags().StringVarP(&konkfilePath, "konkfile", "k", "konkfile.json", "path to konkfile")
 	rootCmd.AddCommand(&execCommand)
 }

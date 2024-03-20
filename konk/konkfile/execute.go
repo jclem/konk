@@ -7,12 +7,15 @@ import (
 
 	"github.com/jclem/konk/konk"
 	"github.com/jclem/konk/konk/konkfile/internal/dag"
+	"github.com/mattn/go-shellwords"
 	"golang.org/x/sync/errgroup"
 )
 
 type ExecuteConfig struct {
-	NoColor bool
-	NoShell bool
+	AggregateOutput bool
+	ContinueOnError bool
+	NoColor         bool
+	NoShell         bool
 }
 
 func Execute(ctx context.Context, file File, command string, cfg ExecuteConfig) error {
@@ -40,6 +43,9 @@ func Execute(ctx context.Context, file File, command string, cfg ExecuteConfig) 
 	mut := new(sync.Mutex)
 	wg := new(sync.WaitGroup)
 
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	onNode := func(n string) error {
 		mut.Lock()
 
@@ -57,16 +63,31 @@ func Execute(ctx context.Context, file File, command string, cfg ExecuteConfig) 
 			mut.Unlock()
 		}
 
-		c := konk.NewShellCommand(konk.ShellCommandConfig{
-			Command: cmd.Run,
-			Label:   n,
-			NoColor: false,
-		})
+		var c *konk.Command
+		if cfg.NoShell {
+			parts, err := shellwords.Parse(cmd.Run)
+			if err != nil {
+				return fmt.Errorf("parsing command: %w", err)
+			}
 
-		ctx, cancel := context.WithCancel(ctx)
-		defer cancel()
+			c = konk.NewCommand(konk.CommandConfig{
+				Name:    parts[0],
+				Args:    parts[1:],
+				Label:   n,
+				NoColor: cfg.NoColor,
+			})
+		} else {
+			c = konk.NewShellCommand(konk.ShellCommandConfig{
+				Command: cmd.Run,
+				Label:   n,
+				NoColor: false,
+			})
+		}
 
-		if err := c.Run(ctx, cancel, konk.RunCommandConfig{}); err != nil {
+		if err := c.Run(ctx, cancel, konk.RunCommandConfig{
+			AggregateOutput: cfg.AggregateOutput,
+			KillOnCancel:    !cfg.ContinueOnError,
+		}); err != nil {
 			return fmt.Errorf("running command: %w", err)
 		}
 

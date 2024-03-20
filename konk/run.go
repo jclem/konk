@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/jclem/konk/konk/internal/env"
 	"github.com/mattn/go-shellwords"
 	"golang.org/x/sync/errgroup"
 )
@@ -27,9 +28,9 @@ func RunConcurrently(ctx context.Context, cfg RunConcurrentlyConfig) ([]*Command
 
 	commands := make([]*Command, len(cfg.Commands))
 
-	env, err := parseEnv(cfg.Env)
+	env, err := env.Parse(cfg.Env)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("parsing env: %w", err)
 	}
 
 	for i, cmd := range cfg.Commands {
@@ -80,28 +81,4 @@ func RunConcurrently(ctx context.Context, cfg RunConcurrentlyConfig) ([]*Command
 	}
 
 	return commands, err
-}
-
-func parseEnv(env []string) ([]string, error) {
-	parsedEnv := make([]string, 0, len(env))
-
-	// Unquote any quoted .env vars.
-	for _, line := range env {
-		parsed, err := shellwords.Parse(line)
-		if err != nil {
-			return nil, fmt.Errorf("parsing .env line: %w", err)
-		}
-
-		if len(parsed) == 0 {
-			continue
-		}
-
-		if len(parsed) != 1 {
-			return nil, fmt.Errorf("invalid .env line: %s", line)
-		}
-
-		parsedEnv = append(parsedEnv, parsed[0])
-	}
-
-	return parsedEnv, nil
 }
