@@ -6,8 +6,7 @@ import (
 	"sync"
 
 	"github.com/jclem/konk/konk"
-	"github.com/jclem/konk/konk/debugger"
-	"github.com/mattn/go-shellwords"
+	"golang.org/x/sync/errgroup"
 )
 
 type ExecuteConfig struct {
@@ -16,99 +15,93 @@ type ExecuteConfig struct {
 }
 
 func Execute(ctx context.Context, file File, command string, cfg ExecuteConfig) error {
-	ex := newExecutor(file, cfg)
-	return ex.execute(ctx, command)
-}
+	dag := newDAG[string]()
 
-type executor struct {
-	file File
-	cfg  ExecuteConfig
-	wg   *sync.WaitGroup
-	mut  *sync.Mutex
-}
-
-func (e *executor) execute(ctx context.Context, cmdName string) error {
-	dbg := debugger.Get(ctx)
-
-	cmd, ok := e.file.Commands[cmdName]
-	if !ok {
-		return fmt.Errorf("command not found: %s", cmdName)
+	for name := range file.Commands {
+		dag.addNode(name)
 	}
+
+	for name, cmd := range file.Commands {
+		for _, dep := range cmd.Dependencies {
+			if err := dag.addEdge(edge[string]{name, dep}); err != nil {
+				return fmt.Errorf("adding edge: %w", err)
+			}
+		}
+	}
+
+	s := &scheduler{wgs: make(map[string]*sync.WaitGroup, 0)}
+
+	for _, node := range dag.nodes {
+		s.wgs[node] = new(sync.WaitGroup)
+		s.wgs[node].Add(1)
+	}
+
+	mut := new(sync.Mutex)
 
 	wg := new(sync.WaitGroup)
-	for _, dep := range cmd.Dependencies {
-		wg.Add(1)
 
-		go func(dep string) {
+	onNode := func(n string) error {
+		mut.Lock()
+
+		cmd, ok := file.Commands[n]
+		if !ok {
+			return fmt.Errorf("command not found: %s", n)
+		}
+
+		if cmd.Exclusive {
+			defer mut.Unlock()
+			wg.Wait()
+		} else {
+			wg.Add(1)
 			defer wg.Done()
-			if err := e.execute(ctx, dep); err != nil {
-				panic(fmt.Errorf("running dependency %s: %w", dep, err))
-			}
-		}(dep)
-	}
+			mut.Unlock()
+		}
 
-	wg.Wait()
+		c := konk.NewShellCommand(konk.ShellCommandConfig{
+			Command: cmd.Run,
+			Label:   n,
+			NoColor: false,
+		})
 
-	if cmd.Run == "" {
+		ctx, cancel := context.WithCancel(ctx)
+		defer cancel()
+
+		if err := c.Run(ctx, cancel, konk.RunCommandConfig{}); err != nil {
+			return fmt.Errorf("running command: %w", err)
+		}
+
 		return nil
 	}
 
-	// Concurrency control:
-	// - The mutex ensures that no other commands run while an exclusive command
-	// 	 is running.
-	// - The wait group ensures an exclusive command waits for all other commands
-	//   to complete.
-
-	e.mut.Lock()
-
-	if cmd.Exclusive {
-		defer e.mut.Unlock()
-		e.wg.Wait()
-	} else {
-		e.wg.Add(1)
-		defer e.wg.Done()
-		e.mut.Unlock()
-	}
-
-	var c *konk.Command
-
-	if e.cfg.NoShell {
-		parts, err := shellwords.Parse(cmd.Run)
-		if err != nil {
-			return fmt.Errorf("parsing command: %w", err)
-		}
-
-		c = konk.NewCommand(konk.CommandConfig{
-			Name:    parts[0],
-			Args:    parts[1:],
-			Label:   cmdName,
-			NoColor: e.cfg.NoColor,
-		})
-	} else {
-		c = konk.NewShellCommand(konk.ShellCommandConfig{
-			Command: cmd.Run,
-			Label:   cmdName,
-			NoColor: e.cfg.NoColor,
+	var eg errgroup.Group
+	for _, n := range dag.nodes {
+		n := n
+		eg.Go(func() error {
+			return s.run(n, dag.from(n), onNode)
 		})
 	}
 
-	dbg.Prettyln(c)
-
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
-	if err := c.Run(ctx, cancel, konk.RunCommandConfig{}); err != nil {
-		return fmt.Errorf("running command: %w", err)
+	if err := eg.Wait(); err != nil {
+		return fmt.Errorf("running commands: %w", err)
 	}
 
 	return nil
 }
 
-func newExecutor(file File, cfg ExecuteConfig) *executor {
-	return &executor{
-		file: file,
-		cfg:  cfg,
-		mut:  new(sync.Mutex),
-		wg:   new(sync.WaitGroup),
+type scheduler struct {
+	wgs map[string]*sync.WaitGroup
+}
+
+func (s *scheduler) run(n string, deps []string, onNode func(string) error) error {
+	defer s.wgs[n].Done()
+
+	for _, dep := range deps {
+		s.wgs[dep].Wait()
 	}
+
+	if err := onNode(n); err != nil {
+		return fmt.Errorf("running node: %w", err)
+	}
+
+	return nil
 }
