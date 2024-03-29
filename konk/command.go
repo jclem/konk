@@ -16,14 +16,14 @@ import (
 )
 
 type Command struct {
-	c      *exec.Cmd
+	cmd    *exec.Cmd
 	out    strings.Builder
 	prefix string
 }
 
 type RunCommandConfig struct {
 	AggregateOutput bool
-	KillOnCancel    bool
+	StopOnCancel    bool
 }
 
 type ShellCommandConfig struct {
@@ -40,7 +40,7 @@ func NewShellCommand(conf ShellCommandConfig) *Command {
 	prefix := getPrefix(conf.Label, conf.NoColor)
 
 	return &Command{
-		c:      c,
+		cmd:    c,
 		prefix: prefix,
 	}
 }
@@ -63,22 +63,22 @@ func setEnv(c *exec.Cmd, env []string, omitEnv bool) {
 }
 
 func NewCommand(conf CommandConfig) *Command {
-	c := exec.Command(conf.Name, conf.Args...) //nolint:gosec // Intentional user-defined sub-process.
-	setEnv(c, conf.Env, conf.OmitEnv)
+	cmd := exec.Command(conf.Name, conf.Args...) //nolint:gosec // Intentional user-defined sub-process.
+	setEnv(cmd, conf.Env, conf.OmitEnv)
 	prefix := getPrefix(conf.Label, conf.NoColor)
 
 	return &Command{
-		c:      c,
+		cmd:    cmd,
 		prefix: prefix,
 	}
 }
 
 func (c *Command) Run(ctx context.Context, cancel context.CancelFunc, conf RunCommandConfig) error {
-	stdout, err := c.c.StdoutPipe()
+	stdout, err := c.cmd.StdoutPipe()
 	if err != nil {
 		return fmt.Errorf("getting stdout pipe: %w", err)
 	}
-	c.c.Stderr = c.c.Stdout
+	c.cmd.Stderr = c.cmd.Stdout
 
 	out := make(chan string)
 	scanner := bufio.NewScanner(stdout)
@@ -86,7 +86,7 @@ func (c *Command) Run(ctx context.Context, cancel context.CancelFunc, conf RunCo
 	scannerErr := make(chan error)
 	allDone := make(chan error)
 
-	if err := c.c.Start(); err != nil {
+	if err := c.cmd.Start(); err != nil {
 		return fmt.Errorf("starting command: %w", err)
 	}
 
@@ -119,8 +119,8 @@ func (c *Command) Run(ctx context.Context, cancel context.CancelFunc, conf RunCo
 					fmt.Fprint(os.Stdout, line)
 				}
 			case <-ctx.Done():
-				if conf.KillOnCancel {
-					_ = c.c.Process.Signal(syscall.SIGTERM)
+				if conf.StopOnCancel {
+					_ = c.cmd.Process.Signal(syscall.SIGTERM)
 					allDone <- nil
 					return
 				}
@@ -146,7 +146,7 @@ func (c *Command) Run(ctx context.Context, cancel context.CancelFunc, conf RunCo
 		fmt.Fprint(os.Stdout, c.ReadOut())
 	}
 
-	if err := c.c.Wait(); err != nil {
+	if err := c.cmd.Wait(); err != nil {
 		cancel()
 
 		var xerr *exec.ExitError

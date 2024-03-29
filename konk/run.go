@@ -70,7 +70,7 @@ func RunConcurrently(ctx context.Context, cfg RunConcurrentlyConfig) ([]*Command
 		eg.Go(func() error {
 			return cmd.Run(ctx, cancel, RunCommandConfig{
 				AggregateOutput: cfg.AggregateOutput,
-				KillOnCancel:    !cfg.ContinueOnError,
+				StopOnCancel:    !cfg.ContinueOnError,
 			})
 		})
 	}

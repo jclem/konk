@@ -15,6 +15,8 @@ import (
 
 var konkfilePath string
 
+const konkfileName = "konkfile"
+
 var execCommand = cobra.Command{
 	Use:     "exec <command>",
 	Aliases: []string{"e"},
@@ -30,7 +32,12 @@ var execCommand = cobra.Command{
 			}
 		}
 
-		kfsearch := []string{"konkfile", "konkfile.json", "konkfile.toml", "konkfile.yaml", "konkfile.yml"}
+		kfsearch := []string{
+			konkfileName,
+			konkfileName + ".json",
+			konkfileName + ".toml",
+			konkfileName + ".yaml", konkfileName + ".yml",
+		}
 		if konkfilePath != "" {
 			kfsearch = []string{konkfilePath}
 		}
@@ -71,13 +78,15 @@ var execCommand = cobra.Command{
 			if err := toml.Unmarshal(kf, &file); err != nil {
 				return fmt.Errorf("unmarshalling konkfile: %w", err)
 			}
-		} else {
+		} else if ext == ".json" {
 			if err := json.Unmarshal(kf, &file); err != nil {
 				return fmt.Errorf("unmarshalling konkfile: %w", err)
 			}
+		} else {
+			return fmt.Errorf("unrecognized file extension: %s", ext)
 		}
 
-		if err := konkfile.Execute(cmd.Context(), file, args[0], konkfile.ExecuteConfig{
+		if err := file.Execute(cmd.Context(), args[0], konkfile.ExecuteConfig{
 			AggregateOutput: aggregateOutput,
 			ContinueOnError: continueOnError,
 			NoColor:         noColor,

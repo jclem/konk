@@ -23,30 +23,34 @@ func (d *DAG[Node]) From(n Node) []Node {
 	return d.nodes[n]
 }
 
-// AddNode adds a new node to the DAG.
-func (d *DAG[Node]) AddNode(n Node) {
-	if d.hasNode(n) {
-		return
-	}
+// AddNodes adds a new node to the DAG.
+func (d *DAG[Node]) AddNodes(ns ...Node) {
+	for _, n := range ns {
+		if d.hasNode(n) {
+			return
+		}
 
-	d.nodes[n] = []Node{}
+		d.nodes[n] = []Node{}
+	}
 }
 
-// AddEdge adds a new edge to the DAG.
-func (d *DAG[Node]) AddEdge(from Node, to Node) error {
-	if !d.hasNode(from) {
-		return errors.New("from node does not exist")
-	}
+// AddEdges adds a new edge to the DAG.
+func (d *DAG[Node]) AddEdges(from Node, tos ...Node) error {
+	for _, to := range tos {
+		if !d.hasNode(from) {
+			return errors.New("from node does not exist")
+		}
 
-	if !d.hasNode(to) {
-		return errors.New("to node does not exist")
-	}
+		if !d.hasNode(to) {
+			return errors.New("to node does not exist")
+		}
 
-	if d.hasEdge(from, to) {
-		return nil
-	}
+		if d.hasEdge(from, to) {
+			return nil
+		}
 
-	d.nodes[from] = append(d.nodes[from], to)
+		d.nodes[from] = append(d.nodes[from], to)
+	}
 
 	return nil
 }
@@ -64,7 +68,7 @@ func (d *DAG[Node]) hasEdge(from Node, to Node) bool {
 	return slices.Contains(d.nodes[from], to)
 }
 
-func (d *DAG[Node]) Visit(n Node) ([]Node, error) {
+func (d *DAG[Node]) VisitBreadthFirst(n Node) ([]Node, error) {
 	if !d.hasNode(n) {
 		return nil, errors.New("node does not exist")
 	}
