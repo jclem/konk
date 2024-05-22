@@ -17,9 +17,3 @@ brews:
     homepage: https://github.com/jclem/konk
     license: MIT
     test: system "#{bin}/konk --version"
-archives:
-  - replacements:
-      darwin: macOS
-      linux: Linux
-      386: 32-bit
-      amd64: 64-bit
