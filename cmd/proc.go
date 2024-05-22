@@ -64,7 +64,9 @@ var procCommand = cobra.Command{
 
 		for label, command := range procfileMap {
 			commandStrings = append(commandStrings, command)
-			if !noLabel {
+			if noLabel {
+				commandLabels = append(commandLabels, "")
+			} else {
 				commandLabels = append(commandLabels, label)
 			}
 		}

@@ -62,6 +62,19 @@ func TestProcWithExternalEnvAndEnv(t *testing.T) {
 `, sortOut(t, out), "output did not match expected output")
 }
 
+func TestProcNoLabel(t *testing.T) {
+	t.Parallel()
+
+	out, err := newProcRunner().
+		withFlags("-B").
+		run(t)
+	require.NoError(t, err)
+
+	assert.Equal(t, `a
+b
+`, sortOut(t, out), "output did not match expected output")
+}
+
 func newProcRunner() runner {
 	return newRunner("proc").withFlags("-w", "fixtures/proc")
 }

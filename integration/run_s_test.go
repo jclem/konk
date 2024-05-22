@@ -116,6 +116,18 @@ func TestRunSeriallyWithNpmGlob(t *testing.T) {
 `, out, "output did not match expected output")
 }
 
+func TestRunSeriallyNoLabel(t *testing.T) {
+	t.Parallel()
+
+	out, err := newSerialRunner().withFlags("-B", "echo a", "echo b", "echo c").run(t)
+	require.NoError(t, err)
+
+	assert.Equal(t, `a
+b
+c
+`, out, "output did not match expected output")
+}
+
 func newSerialRunner() runner {
 	return newRunner("run").withFlags("serially")
 }
