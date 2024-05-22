@@ -15,7 +15,6 @@ var envFile string
 var noEnvFile bool
 var procfile string
 var omitEnv bool
-var noLabel bool // Add noLabel flag
 
 var procCommand = cobra.Command{
 	Use:     "proc",
@@ -65,12 +64,12 @@ var procCommand = cobra.Command{
 
 		for label, command := range procfileMap {
 			commandStrings = append(commandStrings, command)
-			if !noLabel { // Conditionally append label if noLabel is false
+			if !noLabel {
 				commandLabels = append(commandLabels, label)
 			}
 		}
 
-		if !noLabel { // Conditionally process labels if noLabel is false
+		if !noLabel {
 			var maxLabelLen int
 
 			for _, label := range commandLabels {
@@ -116,6 +115,6 @@ func init() {
 	procCommand.Flags().StringVarP(&envFile, "env-file", "e", ".env", "Path to the env file")
 	procCommand.Flags().BoolVar(&omitEnv, "omit-env", false, "Omit any existing runtime environment variables")
 	procCommand.Flags().BoolVarP(&noEnvFile, "no-env-file", "E", false, "Don't load the env file")
-	procCommand.Flags().BoolVarP(&noLabel, "no-label", "B", false, "do not attach label/prefix to output") // Add noLabel flag
+	procCommand.Flags().BoolVarP(&noLabel, "no-label", "B", false, "do not attach label/prefix to output")
 	rootCmd.AddCommand(&procCommand)
 }

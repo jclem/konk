@@ -13,6 +13,7 @@ var continueOnError bool
 var noShell bool
 var workingDirectory string
 var noColor bool
+var noLabel bool
 
 var Version = "dev"
 
