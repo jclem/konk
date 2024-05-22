@@ -115,6 +115,22 @@ func TestRunConcurrentlyWithNpmGlob(t *testing.T) {
 `, sortOut(t, out), "output did not match expected output")
 }
 
+func TestRunConcurrentlyNoLabel(t *testing.T) {
+	t.Parallel()
+
+	out, err := newGroupedConcurrentRunner().
+		withFlags(
+			"-B",
+			"echo a", "echo b", "echo c").
+		run(t)
+	require.NoError(t, err)
+
+	assert.Equal(t, `a
+b
+c
+`, sortOut(t, out), "output did not match expected output")
+}
+
 func newGroupedConcurrentRunner() runner {
 	return newRunner("run").withFlags("concurrently", "-g")
 }
