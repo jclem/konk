@@ -111,7 +111,7 @@ func (c *Command) Run(ctx context.Context, cancel context.CancelFunc, conf RunCo
 		for {
 			select {
 			case t := <-out:
-				line := fmt.Sprintf("%s %s\n", c.prefix, t)
+				line := fmt.Sprintf("%s%s\n", c.prefix, t)
 
 				if conf.AggregateOutput {
 					c.out.WriteString(line)
@@ -183,6 +183,10 @@ func newExitError(label string, err error) error {
 }
 
 func getPrefix(label string, noColor bool) string {
+	if label == "" {
+		return ""
+	}
+
 	var prefix string
 
 	if noColor {
@@ -193,5 +197,5 @@ func getPrefix(label string, noColor bool) string {
 		prefix = prefixStyle.Render(fmt.Sprintf("[%s]", label))
 	}
 
-	return prefix
+	return prefix + " "
 }

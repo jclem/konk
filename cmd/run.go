@@ -15,6 +15,7 @@ import (
 var cmdAsLabel bool
 var npmCmds []string
 var names []string
+var noLabel bool // Add noLabel flag
 
 var runCommand = cobra.Command{
 	Use:     "run <subcommand>",
@@ -36,6 +37,7 @@ func init() {
 	runCommand.PersistentFlags().BoolVarP(&cmdAsLabel, "command-as-label", "L", false, "use each command as its own label")
 	runCommand.PersistentFlags().StringArrayVarP(&npmCmds, "npm", "n", []string{}, "npm command")
 	runCommand.PersistentFlags().StringArrayVarP(&names, "label", "l", []string{}, "label prefix for the command")
+	runCommand.PersistentFlags().BoolVarP(&noLabel, "no-label", "B", false, "do not attach label/prefix to output") // Add noLabel flag
 	rootCmd.AddCommand(&runCommand)
 }
 
@@ -93,6 +95,10 @@ func collectCommands(args []string) ([]string, []string, error) {
 }
 
 func collectLabels(commandStrings []string) []string {
+	if noLabel { // Check if noLabel is true to return empty labels
+		return make([]string, len(commandStrings))
+	}
+
 	labels := make([]string, len(commandStrings))
 
 	for i, cmdStr := range commandStrings {

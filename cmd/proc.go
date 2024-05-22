@@ -15,6 +15,7 @@ var envFile string
 var noEnvFile bool
 var procfile string
 var omitEnv bool
+var noLabel bool // Add noLabel flag
 
 var procCommand = cobra.Command{
 	Use:     "proc",
@@ -64,19 +65,23 @@ var procCommand = cobra.Command{
 
 		for label, command := range procfileMap {
 			commandStrings = append(commandStrings, command)
-			commandLabels = append(commandLabels, label)
-		}
-
-		var maxLabelLen int
-
-		for _, label := range commandLabels {
-			if len(label) > maxLabelLen {
-				maxLabelLen = len(label)
+			if !noLabel { // Conditionally append label if noLabel is false
+				commandLabels = append(commandLabels, label)
 			}
 		}
 
-		for i, label := range commandLabels {
-			commandLabels[i] = fmt.Sprintf("%s%s", label, strings.Repeat(" ", maxLabelLen-len(label)))
+		if !noLabel { // Conditionally process labels if noLabel is false
+			var maxLabelLen int
+
+			for _, label := range commandLabels {
+				if len(label) > maxLabelLen {
+					maxLabelLen = len(label)
+				}
+			}
+
+			for i, label := range commandLabels {
+				commandLabels[i] = fmt.Sprintf("%s%s", label, strings.Repeat(" ", maxLabelLen-len(label)))
+			}
 		}
 
 		commands, err := konk.RunConcurrently(cmd.Context(), konk.RunConcurrentlyConfig{
@@ -111,5 +116,6 @@ func init() {
 	procCommand.Flags().StringVarP(&envFile, "env-file", "e", ".env", "Path to the env file")
 	procCommand.Flags().BoolVar(&omitEnv, "omit-env", false, "Omit any existing runtime environment variables")
 	procCommand.Flags().BoolVarP(&noEnvFile, "no-env-file", "E", false, "Don't load the env file")
+	procCommand.Flags().BoolVarP(&noLabel, "no-label", "B", false, "do not attach label/prefix to output") // Add noLabel flag
 	rootCmd.AddCommand(&procCommand)
 }
