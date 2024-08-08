@@ -89,8 +89,6 @@ var execCommand = cobra.Command{
 		if err := file.Execute(cmd.Context(), args[0], konkfile.ExecuteConfig{
 			AggregateOutput: aggregateOutput,
 			ContinueOnError: continueOnError,
-			NoColor:         noColor,
-			NoShell:         noShell,
 		}); err != nil {
 			return fmt.Errorf("executing command: %w", err)
 		}

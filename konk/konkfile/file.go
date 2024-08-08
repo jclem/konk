@@ -7,7 +7,6 @@ import (
 
 	"github.com/jclem/konk/konk"
 	"github.com/jclem/konk/konk/konkfile/internal/dag"
-	"github.com/mattn/go-shellwords"
 	"golang.org/x/exp/maps"
 	"golang.org/x/sync/errgroup"
 )
@@ -25,8 +24,6 @@ type Command struct {
 type ExecuteConfig struct {
 	AggregateOutput bool
 	ContinueOnError bool
-	NoColor         bool
-	NoShell         bool
 }
 
 func (f File) Execute(ctx context.Context, command string, cfg ExecuteConfig) error {
@@ -65,26 +62,10 @@ func (f File) Execute(ctx context.Context, command string, cfg ExecuteConfig) er
 			mut.Unlock()
 		}
 
-		var c *konk.Command
-		if cfg.NoShell {
-			parts, err := shellwords.Parse(cmd.Run)
-			if err != nil {
-				return fmt.Errorf("parsing command: %w", err)
-			}
-
-			c = konk.NewCommand(konk.CommandConfig{
-				Name:    parts[0],
-				Args:    parts[1:],
-				Label:   n,
-				NoColor: cfg.NoColor,
-			})
-		} else {
-			c = konk.NewShellCommand(konk.ShellCommandConfig{
-				Command: cmd.Run,
-				Label:   n,
-				NoColor: cfg.NoColor,
-			})
-		}
+		c := konk.NewShellCommand(konk.ShellCommandConfig{
+			Command: cmd.Run,
+			Label:   n,
+		})
 
 		if err := c.Run(ctx, cancel, konk.RunCommandConfig{
 			AggregateOutput: cfg.AggregateOutput,
