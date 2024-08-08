@@ -47,16 +47,17 @@ var execCommand = cobra.Command{
 
 		for _, kfp := range kfsearch {
 			b, err := os.ReadFile(kfp)
-			if err != nil {
-				if os.IsNotExist(err) {
-					continue
-				}
-
-				return fmt.Errorf("reading konkfile: %w", err)
+			if err == nil {
+				kf = b
+				kfpath = kfp
+				break
 			}
 
-			kf = b
-			kfpath = kfp
+			if os.IsNotExist(err) {
+				continue
+			}
+
+			return fmt.Errorf("reading konkfile: %w", err)
 		}
 
 		ext := filepath.Ext(kfpath)
@@ -89,8 +90,6 @@ var execCommand = cobra.Command{
 		if err := file.Execute(cmd.Context(), args[0], konkfile.ExecuteConfig{
 			AggregateOutput: aggregateOutput,
 			ContinueOnError: continueOnError,
-			NoColor:         noColor,
-			NoShell:         noShell,
 		}); err != nil {
 			return fmt.Errorf("executing command: %w", err)
 		}

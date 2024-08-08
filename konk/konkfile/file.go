@@ -2,12 +2,13 @@ package konkfile
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/jclem/konk/konk"
 	"github.com/jclem/konk/konk/konkfile/internal/dag"
-	"github.com/mattn/go-shellwords"
 	"golang.org/x/exp/maps"
 	"golang.org/x/sync/errgroup"
 )
@@ -20,16 +21,15 @@ type Command struct {
 	Run       string   `json:"run"       toml:"run"       yaml:"run"`
 	Needs     []string `json:"needs"     toml:"needs"     yaml:"needs"`
 	Exclusive bool     `json:"exclusive" toml:"exclusive" yaml:"exclusive"`
+	Watch     []string `json:"watch"     toml:"watch"     yaml:"watch"`
 }
 
 type ExecuteConfig struct {
 	AggregateOutput bool
 	ContinueOnError bool
-	NoColor         bool
-	NoShell         bool
 }
 
-func (f File) Execute(ctx context.Context, command string, cfg ExecuteConfig) error {
+func (f File) Execute(originalCtx context.Context, command string, cfg ExecuteConfig) error {
 	g := dag.New[string]()
 	g.AddNodes(maps.Keys(f.Commands)...)
 
@@ -44,9 +44,6 @@ func (f File) Execute(ctx context.Context, command string, cfg ExecuteConfig) er
 
 	mut := new(sync.Mutex)
 	wg := new(sync.WaitGroup)
-
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
 
 	onNode := func(n string) error {
 		mut.Lock()
@@ -65,32 +62,75 @@ func (f File) Execute(ctx context.Context, command string, cfg ExecuteConfig) er
 			mut.Unlock()
 		}
 
-		var c *konk.Command
-		if cfg.NoShell {
-			parts, err := shellwords.Parse(cmd.Run)
-			if err != nil {
-				return fmt.Errorf("parsing command: %w", err)
-			}
+		ctx, cancel := context.WithCancel(originalCtx)
+		defer cancel()
 
-			c = konk.NewCommand(konk.CommandConfig{
-				Name:    parts[0],
-				Args:    parts[1:],
-				Label:   n,
-				NoColor: cfg.NoColor,
-			})
-		} else {
-			c = konk.NewShellCommand(konk.ShellCommandConfig{
+		var runCommand func() error
+		runCommand = func() error {
+			ctx, cancel = context.WithCancel(originalCtx)
+			defer cancel()
+
+			c := konk.NewShellCommand(konk.ShellCommandConfig{
 				Command: cmd.Run,
 				Label:   n,
-				NoColor: cfg.NoColor,
 			})
+
+			if err := c.Run(ctx, cancel, konk.RunCommandConfig{
+				AggregateOutput: cfg.AggregateOutput,
+				StopOnCancel:    cmd.Watch != nil || !cfg.ContinueOnError,
+			}); err != nil {
+				var xerr *konk.ExitError
+				if errors.As(err, &xerr) {
+					return runCommand()
+				}
+
+				return fmt.Errorf("running command: %w", err)
+			}
+
+			return nil
 		}
 
-		if err := c.Run(ctx, cancel, konk.RunCommandConfig{
-			AggregateOutput: cfg.AggregateOutput,
-			StopOnCancel:    !cfg.ContinueOnError,
-		}); err != nil {
-			return fmt.Errorf("running command: %w", err)
+		if cmd.Watch != nil {
+			watcher, err := fsnotify.NewWatcher()
+			if err != nil {
+				return fmt.Errorf("creating watcher: %w", err)
+			}
+			defer watcher.Close()
+
+			go func() {
+				for {
+					select {
+					case event, ok := <-watcher.Events:
+						if !ok {
+							return
+						}
+
+						fmt.Printf("event: %s\n", event)
+
+						cancel()
+					case err, ok := <-watcher.Errors:
+						if !ok {
+							return
+						}
+
+						fmt.Printf("error: %s\n", err)
+					}
+				}
+			}()
+
+			for _, path := range cmd.Watch {
+				if err := watcher.Add(path); err != nil {
+					return fmt.Errorf("watching path: %w", err)
+				}
+			}
+
+			if err := runCommand(); err != nil {
+				return err
+			}
+		} else {
+			if err := runCommand(); err != nil {
+				return err
+			}
 		}
 
 		return nil
