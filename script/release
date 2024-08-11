@@ -15,5 +15,5 @@ set -ex
 npm version $1 --sign-git-tag
 git push
 git push --tags
-goreleaser release --rm-dist
+goreleaser release
 npm publish --access=public
