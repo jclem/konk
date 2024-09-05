@@ -14,6 +14,7 @@ import (
 
 var cmdAsLabel bool
 var npmCmds []string
+var runWithBun bool
 var names []string
 
 var runCommand = cobra.Command{
@@ -35,6 +36,7 @@ func init() {
 
 	runCommand.PersistentFlags().BoolVarP(&cmdAsLabel, "command-as-label", "L", false, "use each command as its own label")
 	runCommand.PersistentFlags().StringArrayVarP(&npmCmds, "npm", "n", []string{}, "npm command")
+	runCommand.PersistentFlags().BoolVarP(&runWithBun, "bun", "b", false, "Run npm commands with Bun")
 	runCommand.PersistentFlags().StringArrayVarP(&names, "label", "l", []string{}, "label prefix for the command")
 	runCommand.PersistentFlags().BoolVarP(&noLabel, "no-label", "B", false, "do not attach label/prefix to output")
 	rootCmd.AddCommand(&runCommand)
@@ -79,7 +81,11 @@ func collectCommands(args []string) ([]string, []string, error) {
 
 			for _, script := range matchingScripts {
 				commandStrings = append(commandStrings, script)
-				commands = append(commands, "npm run "+script)
+				if runWithBun {
+					commands = append(commands, "bun run "+script)
+				} else {
+					commands = append(commands, "npm run "+script)
+				}
 			}
 
 			continue
