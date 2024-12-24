@@ -56,12 +56,16 @@ var sCommand = cobra.Command{
 					Args:    parts[1:],
 					Label:   labels[i],
 					NoColor: noColor,
+					Env:     make([]string, 0),
+					OmitEnv: false,
 				})
 			} else {
 				c = konk.NewShellCommand(konk.ShellCommandConfig{
 					Command: cmd,
 					Label:   labels[i],
 					NoColor: noColor,
+					Env:     make([]string, 0),
+					OmitEnv: false,
 				})
 			}
 
@@ -74,7 +78,10 @@ var sCommand = cobra.Command{
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			if err := c.Run(ctx, cancel, konk.RunCommandConfig{}); err != nil && continueOnError {
+			if err := c.Run(ctx, cancel, konk.RunCommandConfig{
+				AggregateOutput: false,
+				StopOnCancel:    false,
+			}); err != nil && continueOnError {
 				errCmd = err
 			} else if err != nil {
 				return fmt.Errorf("running command: %w", err)

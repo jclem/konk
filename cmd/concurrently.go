@@ -40,6 +40,8 @@ var cCommand = cobra.Command{
 		commands, err := konk.RunConcurrently(cmd.Context(), konk.RunConcurrentlyConfig{
 			Commands:        cmdParts,
 			Labels:          labels,
+			Env:             make([]string, 0),
+			OmitEnv:         false,
 			AggregateOutput: aggregateOutput,
 			ContinueOnError: continueOnError,
 			NoColor:         noColor,

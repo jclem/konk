@@ -88,9 +88,10 @@ var procCommand = cobra.Command{
 		commands, err := konk.RunConcurrently(cmd.Context(), konk.RunConcurrentlyConfig{
 			Commands:        commandStrings,
 			Labels:          commandLabels,
-			ContinueOnError: continueOnError,
 			Env:             envLines,
 			OmitEnv:         omitEnv,
+			AggregateOutput: false,
+			ContinueOnError: continueOnError,
 			NoColor:         noColor,
 			NoShell:         noShell,
 		})

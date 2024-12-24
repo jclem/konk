@@ -39,11 +39,6 @@ linters-settings:
 
   exhaustruct:
     exclude:
-      - "^github.com/jclem/konk/konk.Command$"
-      - "^github.com/jclem/konk/konk.CommandConfig$"
-      - "^github.com/jclem/konk/konk.RunCommandConfig$"
-      - "^github.com/jclem/konk/konk.ShellCommandConfig$"
-      - "^github.com/jclem/konk/konk.RunConcurrentlyConfig$"
       - "^github.com/spf13/cobra.Command$"
 
   funlen:

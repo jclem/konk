@@ -41,6 +41,7 @@ func NewShellCommand(conf ShellCommandConfig) *Command {
 
 	return &Command{
 		cmd:    c,
+		out:    strings.Builder{},
 		prefix: prefix,
 	}
 }
@@ -69,6 +70,7 @@ func NewCommand(conf CommandConfig) *Command {
 
 	return &Command{
 		cmd:    cmd,
+		out:    strings.Builder{},
 		prefix: prefix,
 	}
 }
