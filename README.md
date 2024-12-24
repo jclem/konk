@@ -352,6 +352,27 @@ Run commands concurrently (alias: c)
 konk run concurrently <command...> [flags]
 ```
 
+### Examples
+
+```
+# Run two commands concurrently
+
+konk run concurrently "script/api-server" "script/frontend-server"
+
+# Run a set of npm commands concurrently
+
+konk run concurrently -n lint -n test
+
+# Run a set of npm commands concurrently, but aggregate their output
+
+konk run concurrently -g -n lint -n test
+
+# Run all npm commands prefixed with "check:" concurrently using Bun, ignore
+# errors, aggregate output, and use the script name as the label
+
+konk run concurrently -bgcL -n "check:*"
+```
+
 ### Options
 
 ```
@@ -384,6 +405,18 @@ Run commands serially (alias: s)
 
 ```
 konk run serially <command...> [flags]
+```
+
+### Examples
+
+```
+# Run two commands in serial
+
+konk run serially "echo foo" "echo bar"
+
+# Run a set of npm commands in serial
+
+konk run serially -n build -n deploy
 ```
 
 ### Options

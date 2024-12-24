@@ -16,6 +16,13 @@ var sCommand = cobra.Command{
 	Use:     "serially <command...>",
 	Aliases: []string{"s"},
 	Short:   "Run commands serially (alias: s)",
+	Example: `# Run two commands in serial
+
+konk run serially "echo foo" "echo bar"
+
+# Run a set of npm commands in serial
+
+konk run serially -n build -n deploy`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		dbg := debugger.Get(cmd.Context())
 		dbg.Flags(cmd)

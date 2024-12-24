@@ -16,6 +16,22 @@ var cCommand = cobra.Command{
 	Use:     "concurrently <command...>",
 	Aliases: []string{"c"},
 	Short:   "Run commands concurrently (alias: c)",
+	Example: `# Run two commands concurrently
+
+konk run concurrently "script/api-server" "script/frontend-server"
+
+# Run a set of npm commands concurrently
+
+konk run concurrently -n lint -n test
+
+# Run a set of npm commands concurrently, but aggregate their output
+
+konk run concurrently -g -n lint -n test
+
+# Run all npm commands prefixed with "check:" concurrently using Bun, ignore
+# errors, aggregate output, and use the script name as the label
+
+konk run concurrently -bgcL -n "check:*"`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		dbg := debugger.Get(cmd.Context())
 		dbg.Flags(cmd)
