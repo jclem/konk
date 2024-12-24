@@ -182,6 +182,8 @@ func newExitError(label string, err error) error {
 	}
 }
 
+const colors = 16
+
 func getPrefix(label string, noColor bool) string {
 	if label == "" {
 		return ""
@@ -192,7 +194,7 @@ func getPrefix(label string, noColor bool) string {
 	if noColor {
 		prefix = fmt.Sprintf("[%s]", label)
 	} else {
-		prefixColor := rand.Intn(16) + 1 //nolint:gosec // No need for cryptographic randomness for process labels.
+		prefixColor := rand.Intn(colors) + 1 //nolint:gosec // No need for strong rand here.
 		prefixStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(strconv.Itoa(prefixColor)))
 		prefix = prefixStyle.Render(fmt.Sprintf("[%s]", label))
 	}

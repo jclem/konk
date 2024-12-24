@@ -108,8 +108,10 @@ var procCommand = cobra.Command{
 }
 
 func init() {
-	procCommand.Flags().StringVarP(&workingDirectory, "working-directory", "w", "", "set the working directory for all commands")
-	procCommand.Flags().BoolVarP(&continueOnError, "continue-on-error", "c", false, "continue running commands after a failure")
+	procCommand.Flags().StringVarP(&workingDirectory,
+		"working-directory", "w", "", "set the working directory for all commands")
+	procCommand.Flags().BoolVarP(&continueOnError,
+		"continue-on-error", "c", false, "continue running commands after a failure")
 	procCommand.Flags().BoolVarP(&noShell, "no-subshell", "S", false, "do not run commands in a subshell")
 	procCommand.Flags().BoolVarP(&noColor, "no-color", "C", false, "do not colorize label output")
 

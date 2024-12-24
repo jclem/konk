@@ -1,3 +1,5 @@
+# schema: https://golangci-lint.run/jsonschema/golangci.jsonschema.json
+
 issues:
   exclude-rules:
     - path: cmd/
@@ -9,7 +11,7 @@ linters:
   presets:
     - bugs
     - comment
-    # - complexity # limits cyclomatic complexity—typically results in hard-to-follow code
+    - complexity
     - error
     - format
     - import
@@ -23,17 +25,31 @@ linters:
 
   disable:
     - depguard # enforces dependency allow list; not using allow list
-    - paralleltest # not enough tests to matter; not helpful
 
     # annoying/bad
-    - exhaustruct # enforces exhaustive structs; often incorrect; bad
-    - goerr113 # disallows returning one-off errors; annoying
+    - err113 # disallows returning one-off errors; annoying
     - gofumpt # different code formatter; bad
-    - gomnd # disallows magic numbers; annoying
-    - ireturn # bans returning interfaces; often incorrect; bad
-    - lll # limits line length; annoying
     - nlreturn # requires blank line before return; annoying
-    - nonamedreturns # disallows named returns; often required for defer error checking; bad
-    - tagliatelle # enforces tag name style; often incorrect; bad
-    - varnamelen # limits variable name length; annoying
-    - wsl # tedious whitespace rules; annoying
+    - varnamelen # limits variable name length; too many false positives
+    - wsl # whitespace/cuddle rules; tedious
+
+linters-settings:
+  cyclop:
+    max-complexity: 30
+
+  exhaustruct:
+    exclude:
+      - "^github.com/jclem/konk/konk.Command$"
+      - "^github.com/jclem/konk/konk.CommandConfig$"
+      - "^github.com/jclem/konk/konk.RunCommandConfig$"
+      - "^github.com/jclem/konk/konk.ShellCommandConfig$"
+      - "^github.com/jclem/konk/konk.RunConcurrentlyConfig$"
+      - "^github.com/spf13/cobra.Command$"
+
+  funlen:
+    lines: 100
+    ignore-comments: true
+
+  mnd:
+    ignored-functions:
+      - strings.SplitN

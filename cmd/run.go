@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"sort"
@@ -29,8 +28,10 @@ var runCommand = cobra.Command{
 }
 
 func init() {
-	runCommand.PersistentFlags().StringVarP(&workingDirectory, "working-directory", "w", "", "set the working directory for all commands")
-	runCommand.PersistentFlags().BoolVarP(&continueOnError, "continue-on-error", "c", false, "continue running commands after a failure")
+	runCommand.PersistentFlags().StringVarP(&workingDirectory,
+		"working-directory", "w", "", "set the working directory for all commands")
+	runCommand.PersistentFlags().BoolVarP(&continueOnError,
+		"continue-on-error", "c", false, "continue running commands after a failure")
 	runCommand.PersistentFlags().BoolVarP(&noShell, "no-subshell", "S", false, "do not run commands in a subshell")
 	runCommand.PersistentFlags().BoolVarP(&noColor, "no-color", "C", false, "do not colorize label output")
 
@@ -43,60 +44,87 @@ func init() {
 }
 
 func collectCommands(args []string) ([]string, []string, error) {
-	commandStrings := []string{}
-	commands := []string{}
+	// The commands as provided by the user
+	providedCommands := []string{}
+
+	// "Resolved" commands (e.g. prefixed with "bun run", etc.)
+	runnableCommands := []string{}
 
 	for _, cmd := range args {
-		commandStrings = append(commandStrings, cmd)
-		commands = append(commands, cmd)
+		providedCommands = append(providedCommands, cmd)
+		runnableCommands = append(runnableCommands, cmd)
+	}
+
+	var scripts []string
+
+	if len(npmCmds) > 0 {
+		var err error
+		scripts, err = getPackageJSONScripts()
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
 	for _, cmd := range npmCmds {
 		if strings.HasSuffix(cmd, "*") {
 			prefix := strings.TrimSuffix(cmd, "*")
-			pkgFile, err := os.ReadFile("package.json")
-			if err != nil {
-				return nil, nil, fmt.Errorf("reading package.json: %w", err)
-			}
-			var pkg map[string]any
-			if err := json.Unmarshal(pkgFile, &pkg); err != nil {
-				return nil, nil, fmt.Errorf("unmarshalling package.json: %w", err)
-			}
 
 			// See if any "scripts" match our prefix
 			matchingScripts := []string{}
 
-			scripts, ok := pkg["scripts"].(map[string]any)
-			if !ok {
-				return nil, nil, errors.New("invalid scripts in package.json")
-			}
-
-			for script := range scripts {
+			for _, script := range scripts {
 				if strings.HasPrefix(script, prefix) {
 					matchingScripts = append(matchingScripts, script)
 				}
 			}
 
-			sort.Strings(matchingScripts)
-
 			for _, script := range matchingScripts {
-				commandStrings = append(commandStrings, script)
+				providedCommands = append(providedCommands, script)
+
 				if runWithBun {
-					commands = append(commands, "bun run "+script)
+					runnableCommands = append(runnableCommands, "bun run "+script)
 				} else {
-					commands = append(commands, "npm run "+script)
+					runnableCommands = append(runnableCommands, "npm run "+script)
 				}
 			}
 
 			continue
 		}
 
-		script := "npm run " + cmd
-		commandStrings = append(commandStrings, cmd)
-		commands = append(commands, script)
+		providedCommands = append(providedCommands, cmd)
+
+		if runWithBun {
+			runnableCommands = append(runnableCommands, "bun run "+cmd)
+		} else {
+			runnableCommands = append(runnableCommands, "npm run "+cmd)
+		}
 	}
 
-	return commandStrings, commands, nil
+	return providedCommands, runnableCommands, nil
+}
+
+func getPackageJSONScripts() ([]string, error) {
+	pkgFile, err := os.ReadFile("package.json")
+	if err != nil {
+		return nil, fmt.Errorf("reading package.json: %w", err)
+	}
+
+	var pkgJSON struct {
+		Scripts map[string]string `json:"scripts"`
+	}
+
+	if err := json.Unmarshal(pkgFile, &pkgJSON); err != nil {
+		return nil, fmt.Errorf("unmarshalling package.json: %w", err)
+	}
+
+	scripts := make([]string, 0, len(pkgJSON.Scripts))
+	for script := range pkgJSON.Scripts {
+		scripts = append(scripts, script)
+	}
+
+	sort.Strings(scripts)
+
+	return scripts, nil
 }
 
 func collectLabels(commandStrings []string) []string {

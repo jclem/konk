@@ -14,7 +14,11 @@ type runner struct {
 }
 
 func newRunner(cmd string) runner {
-	return runner{cmd: cmd}
+	return runner{
+		cmd:   cmd,
+		flags: make([]string, 0),
+		env:   make([]string, 0),
+	}
 }
 
 func (r runner) withFlags(flags ...string) runner {

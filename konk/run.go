@@ -65,8 +65,6 @@ func RunConcurrently(ctx context.Context, cfg RunConcurrentlyConfig) ([]*Command
 	}
 
 	for _, cmd := range commands {
-		cmd := cmd
-
 		eg.Go(func() error {
 			return cmd.Run(ctx, cancel, RunCommandConfig{
 				AggregateOutput: cfg.AggregateOutput,

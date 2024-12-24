@@ -46,10 +46,12 @@ func TestRunSeriallyWithLabelsMismatch(t *testing.T) {
 		run(t)
 
 	if assert.Error(t, err) {
-		assert.IsType(t, &exec.ExitError{}, err)
+		assert.IsType(t, &exec.ExitError{}, err) //nolint:exhaustruct
 	}
 
-	assert.Equal(t, "Error: number of names must match number of commands\n", out, "error output did not match expectation")
+	assert.Equal(t,
+		"Error: number of names must match number of commands\n", out,
+		"error output did not match expectation")
 }
 
 func TestRunSeriallyWithCommandLabels(t *testing.T) {

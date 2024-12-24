@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var contextKey = struct{}{} //nolint:gochecknoglobals // we want to use a global key
+type contextKey struct{}
 
 type Debugger struct {
 	debug *bool
@@ -17,7 +17,7 @@ type Debugger struct {
 
 func WithDebugger(ctx context.Context, debug *bool) context.Context {
 	dbg := Debugger{debug}
-	return context.WithValue(ctx, contextKey, &dbg)
+	return context.WithValue(ctx, contextKey{}, &dbg)
 }
 
 func (d *Debugger) Debugf(format string, args ...interface{}) {
@@ -39,7 +39,7 @@ func (d *Debugger) Prettyln(arg ...interface{}) {
 }
 
 func Get(ctx context.Context) *Debugger {
-	dbg, ok := ctx.Value(contextKey).(*Debugger)
+	dbg, ok := ctx.Value(contextKey{}).(*Debugger)
 	if !ok {
 		panic("no debugger in context")
 	}
