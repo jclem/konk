@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -19,6 +20,15 @@ type Command struct {
 	cmd    *exec.Cmd
 	out    strings.Builder
 	prefix string
+}
+
+var _ slog.LogValuer = (*Command)(nil)
+
+func (c *Command) LogValue() slog.Value {
+	return slog.GroupValue(
+		slog.String("command", c.cmd.String()),
+		slog.String("prefix", c.prefix),
+	)
 }
 
 type RunCommandConfig struct {

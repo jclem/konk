@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/jclem/konk/konk"
-	"github.com/jclem/konk/konk/debugger"
 	"github.com/spf13/cobra"
 )
 
@@ -21,8 +20,11 @@ var procCommand = cobra.Command{
 	Aliases: []string{"p"},
 	Short:   "Run commands defined in a Procfile (alias: p)",
 	RunE: func(cmd *cobra.Command, _ []string) error {
-		dbg := debugger.Get(cmd.Context())
-		dbg.Flags(cmd)
+		ctx := cmd.Context()
+
+		if debug {
+			cmd.DebugFlags()
+		}
 
 		if workingDirectory != "" {
 			if err := os.Chdir(workingDirectory); err != nil {
@@ -85,7 +87,7 @@ var procCommand = cobra.Command{
 			}
 		}
 
-		commands, err := konk.RunConcurrently(cmd.Context(), konk.RunConcurrentlyConfig{
+		commands, err := konk.RunConcurrently(ctx, konk.RunConcurrentlyConfig{
 			Commands:        commandStrings,
 			Labels:          commandLabels,
 			Env:             envLines,
@@ -96,9 +98,7 @@ var procCommand = cobra.Command{
 			NoShell:         noShell,
 		})
 
-		if commands != nil {
-			dbg.Prettyln(commands)
-		}
+		debugCommands(ctx, commands)
 
 		if err != nil {
 			return fmt.Errorf("running commands: %w", err)

@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/jclem/konk/konk"
-	"github.com/jclem/konk/konk/debugger"
 	"github.com/mattn/go-shellwords"
 	"github.com/spf13/cobra"
 )
@@ -24,8 +23,11 @@ konk run serially "echo foo" "echo bar"
 
 konk run serially -n build -n deploy`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		dbg := debugger.Get(cmd.Context())
-		dbg.Flags(cmd)
+		ctx := cmd.Context()
+
+		if debug {
+			cmd.DebugFlags()
+		}
 
 		if workingDirectory != "" {
 			if err := os.Chdir(workingDirectory); err != nil {
@@ -79,7 +81,7 @@ konk run serially -n build -n deploy`,
 			commands[i] = c
 		}
 
-		dbg.Prettyln(commands)
+		debugCommands(ctx, commands)
 
 		for _, c := range commands {
 			ctx, cancel := context.WithCancel(context.Background())

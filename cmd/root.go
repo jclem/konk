@@ -2,9 +2,12 @@ package cmd
 
 import (
 	"context"
+	"log/slog"
 	"os"
+	"strconv"
 
-	"github.com/jclem/konk/konk/debugger"
+	"github.com/golang-cz/devslog"
+	"github.com/jclem/konk/konk"
 	"github.com/spf13/cobra"
 )
 
@@ -26,14 +29,28 @@ var rootCmd = &cobra.Command{
 		// Ensures that usage isn't printed for errors such as non-zero exits.
 		// SEE: https://github.com/spf13/cobra/issues/340#issuecomment-378726225
 		cmd.SilenceUsage = true
+
+		level := slog.LevelInfo
+		if debug {
+			level = slog.LevelDebug
+		}
+
+		slog.SetDefault(slog.New(devslog.NewHandler(os.Stdout, &devslog.Options{ //nolint:exhaustruct // Fields not needed.
+			HandlerOptions: &slog.HandlerOptions{Level: level}, //nolint:exhaustruct // Fields not needed.
+		})))
 	},
 }
 
-func Execute() {
+func init() {
 	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "D", false, "debug mode")
-	ctx := debugger.WithDebugger(context.Background(), &debug)
+}
 
-	if err := rootCmd.ExecuteContext(ctx); err != nil {
-		os.Exit(1)
+func debugCommands(ctx context.Context, commands []*konk.Command) {
+	if commands != nil {
+		var attrs []any
+		for i, c := range commands {
+			attrs = append(attrs, slog.Any(strconv.Itoa(i), c))
+		}
+		slog.DebugContext(ctx, "commands", attrs...)
 	}
 }

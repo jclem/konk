@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/jclem/konk/konk"
-	"github.com/jclem/konk/konk/debugger"
 	"github.com/spf13/cobra"
 )
 
@@ -33,8 +32,11 @@ konk run concurrently -g -n lint -n test
 
 konk run concurrently -bgcL -n "check:*"`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		dbg := debugger.Get(cmd.Context())
-		dbg.Flags(cmd)
+		ctx := cmd.Context()
+
+		if debug {
+			cmd.DebugFlags()
+		}
 
 		if workingDirectory != "" {
 			if err := os.Chdir(workingDirectory); err != nil {
@@ -53,7 +55,7 @@ konk run concurrently -bgcL -n "check:*"`,
 
 		labels := collectLabels(cmdStrings)
 
-		commands, err := konk.RunConcurrently(cmd.Context(), konk.RunConcurrentlyConfig{
+		commands, err := konk.RunConcurrently(ctx, konk.RunConcurrentlyConfig{
 			Commands:        cmdParts,
 			Labels:          labels,
 			Env:             make([]string, 0),
@@ -64,9 +66,7 @@ konk run concurrently -bgcL -n "check:*"`,
 			NoShell:         noShell,
 		})
 
-		if commands != nil {
-			dbg.Prettyln(commands)
-		}
+		debugCommands(ctx, commands)
 
 		if err != nil {
 			return fmt.Errorf("running commands: %w", err)
